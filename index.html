@@ -35,10 +35,23 @@
             </select>
           </div>
           <p id="gPresetNote" class="preset-note"></p>
+          <div class="sub-control">
+            <label for="gCablePreset">ケーブルプリセット</label>
+            <select id="gCablePreset">
+              <option value="low-cap">低容量（70 pF/m）</option>
+              <option value="standard" selected>標準例（100 pF/m）</option>
+              <option value="gs6">Canare GS-6（160 pF/m）</option>
+              <option value="custom">カスタム</option>
+            </select>
+          </div>
           <div id="gControls"></div>
           <button id="gReset" class="quiet-button full" type="button">初期値に戻す</button>
         </aside>
         <div class="visuals">
+          <aside class="model-note">
+            <b>Stratタイプとは？</b>
+            Fender Stratocaster系でよく使われるシングルコイルPickupと250 kΩのVolume/Toneを想定した呼び方です。この画面は、通常3個あるPickupのうち<b>1個だけを選択した状態</b>を表します。
+          </aside>
           <ol class="signal-story" aria-label="ギターからアンプまでの信号の流れ">
             <li class="story-item pickup-stage">
               <svg class="story-icon" viewBox="0 0 64 64" aria-hidden="true"><path d="M10 16h44M10 24h44M10 32h44M10 40h44M10 48h44"/><rect x="22" y="12" width="20" height="40" rx="5"/><circle cx="27" cy="20" r="1.8"/><circle cx="37" cy="20" r="1.8"/><circle cx="27" cy="44" r="1.8"/><circle cx="37" cy="44" r="1.8"/></svg>
@@ -88,6 +101,15 @@
               <option value="guitar">ギター直結</option>
             </select>
           </div>
+          <div class="sub-control">
+            <label for="lCablePreset">ケーブルプリセット</label>
+            <select id="lCablePreset">
+              <option value="low-cap">低容量（70 pF/m）</option>
+              <option value="standard" selected>標準例（100 pF/m）</option>
+              <option value="gs6">Canare GS-6容量参考</option>
+              <option value="custom">カスタム</option>
+            </select>
+          </div>
           <div id="lControls"></div>
           <button id="lReset" class="quiet-button full" type="button">初期値に戻す</button>
         </aside>
@@ -109,7 +131,7 @@
             </li>
           </ol>
           <article class="panel">
-            <div class="panel-title"><h2>機器間接続を電気回路に置き換えると</h2><span>線路は集中定数 R・L・C で近似</span></div>
+            <div class="panel-title"><h2>機器間接続を電気回路に置き換えると</h2><span>ケーブルLが増えるとコイル記号のループも増えます</span></div>
             <svg id="lCircuit" class="circuit" viewBox="0 0 980 290" role="img" aria-labelledby="lCircuitTitle lCircuitDesc">
               <title id="lCircuitTitle">信号源、ケーブル、負荷の等価回路</title>
               <desc id="lCircuitDesc">出力抵抗、ケーブルの直列抵抗とインダクタンス、対地容量、入力抵抗を示す。</desc>

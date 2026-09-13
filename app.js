@@ -11,7 +11,6 @@ const div = (a, b) => {
 const inv = (a) => div(complex(1, 0), a);
 const parallel = (...items) => inv(items.reduce((sum, z) => add(sum, inv(z)), complex()));
 const magnitude = (z) => Math.hypot(z.re, z.im);
-const phaseDeg = (z) => Math.atan2(z.im, z.re) * 180 / Math.PI;
 const dB = (v) => 20 * Math.log10(Math.max(v, 1e-12));
 const logspace = (start, end, count) => Array.from({ length: count }, (_, i) => start * Math.pow(end / start, i / (count - 1)));
 const frequencies = logspace(20, 20000, 401);
@@ -143,22 +142,16 @@ function lineTransfer(params, f) {
   return div(load, add(series, load));
 }
 
-function lineInputImpedance(params, f) {
-  const w = 2 * Math.PI * f;
-  const load = parallel(complex(params.loadR, 0), complex(0, -1 / (w * params.cableC)));
-  return add(complex(params.cableR, w * params.cableL), load);
-}
-
 function guitarCircuitSvg() {
   const v = (key, unit) => formatValue(guitar[key], unit);
   return `
   <g class="group-label"><text x="55" y="28">PICKUP</text><text x="335" y="28">GUITAR CONTROLS</text><text x="610" y="28">CABLE</text><text x="790" y="28">AMPLIFIER INPUT</text></g>
   <g class="wire"><line x1="40" y1="118" x2="78" y2="118"/><line x1="78" y1="225" x2="930" y2="225"/><line x1="40" y1="118" x2="40" y2="225"/><line x1="78" y1="118" x2="108" y2="118"/><line x1="183" y1="118" x2="210" y2="118"/><line x1="287" y1="118" x2="850" y2="118"/></g>
-  <g class="component active"><circle cx="78" cy="171" r="21"/><path d="M63 171 q7 -15 15 0 q8 15 15 0"/><path d="M108 118 q8 -25 16 0 q8 25 16 0 q8 -25 16 0 q8 25 16 0 q8 -25 16 0"/><path d="M210 118 l10 -14 12 28 12 -28 12 28 12 -28 19 14"/></g>
+  <g class="component pickup-component"><circle cx="78" cy="171" r="21"/><path d="M63 171 q7 -15 15 0 q8 15 15 0"/><path d="M108 118 q8 -25 16 0 q8 25 16 0 q8 -25 16 0 q8 25 16 0 q8 -25 16 0"/><path d="M210 118 l10 -14 12 28 12 -28 12 28 12 -28 19 14"/></g>
   <g class="wire"><line x1="78" y1="118" x2="78" y2="150"/><line x1="78" y1="192" x2="78" y2="225"/></g>
-  <g class="component"><path d="M430 118 v20 l-12 8 24 12 -24 12 24 12 -12 8 v8"/><path d="M430 198 v5 m-15 0 h30 m-30 12 h30 m-15 0 v10"/><path d="M645 118 v35 m-15 0 h30 m-30 12 h30 m-15 0 v60"/><path d="M760 118 l10 -14 12 28 12 -28 12 28 12 -28 12 14"/><path d="M850 118 v28 l-12 8 24 12 -24 12 24 12 -12 8 v27"/></g>
+  <g class="component control-component"><path d="M430 118 v20 l-12 8 24 12 -24 12 24 12 -12 8 v8"/><path d="M430 198 v5 m-15 0 h30 m-30 12 h30 m-15 0 v10"/></g><g class="component cable-component"><path d="M645 118 v35 m-15 0 h30 m-30 12 h30 m-15 0 v60"/></g><g class="component amp-component"><path d="M760 118 l10 -14 12 28 12 -28 12 28 12 -28 12 14"/><path d="M850 118 v28 l-12 8 24 12 -24 12 24 12 -12 8 v27"/></g>
   <g class="wire"><line x1="287" y1="118" x2="287" y2="225"/><line x1="850" y1="118" x2="930" y2="118"/></g>
-  <g class="component"><path d="M287 142 l-12 8 24 12 -24 12 24 12 -12 8"/><path d="M930 118 v28 l-12 8 24 12 -24 12 24 12 -12 8 v27"/></g>
+  <g class="component control-component"><path d="M287 142 l-12 8 24 12 -24 12 24 12 -12 8"/></g><g class="component amp-component"><path d="M930 118 v28 l-12 8 24 12 -24 12 24 12 -12 8 v27"/></g>
   <g class="node"><circle cx="287" cy="118" r="5"/><circle cx="645" cy="118" r="5"/><circle cx="850" cy="118" r="5"/></g>
   <g><text x="45" y="260">V<tspan baseline-shift="sub">pickup</tspan></text><text x="122" y="82">L<tspan baseline-shift="sub">p</tspan></text><text class="value" x="115" y="101">${v("pickupL", "H")}</text><text x="220" y="82">DCR</text><text class="value" x="214" y="101">${v("pickupR", "Ω")}</text><text x="302" y="160">Volume</text><text class="value" x="302" y="181">${v("volumeR", "Ω")}</text><text x="452" y="148">Tone</text><text class="value" x="452" y="171">${v("toneR", "Ω")}</text><text class="value" x="452" y="214">${v("toneC", "F")}</text><text x="602" y="144">Cable C</text><text class="value" x="598" y="207">${v("cableC", "F")}</text><text x="760" y="80">R<tspan baseline-shift="sub">series</tspan></text><text class="value" x="755" y="100">${v("ampSeriesR", "Ω")}</text><text x="868" y="156">C<tspan baseline-shift="sub">in</tspan></text><text class="value" x="865" y="178">${v("ampInputC", "F")}</text><text x="890" y="244">R<tspan baseline-shift="sub">in</tspan> ${v("ampInputR", "Ω")}</text><text x="920" y="102">V<tspan baseline-shift="sub">out</tspan></text></g>`;
 }
@@ -168,9 +161,9 @@ function lineCircuitSvg() {
   return `
   <g class="group-label"><text x="55" y="30">SOURCE</text><text x="310" y="30">CABLE</text><text x="760" y="30">LOAD</text></g>
   <g class="wire"><line x1="55" y1="120" x2="100" y2="120"/><line x1="100" y1="222" x2="900" y2="222"/><line x1="55" y1="120" x2="55" y2="222"/><line x1="100" y1="120" x2="135" y2="120"/><line x1="225" y1="120" x2="280" y2="120"/><line x1="370" y1="120" x2="415" y2="120"/><line x1="515" y1="120" x2="850" y2="120"/></g>
-  <g class="component active"><circle cx="100" cy="171" r="22"/><path d="M84 171 q8 -15 16 0 q8 15 16 0"/><path d="M135 120 l11 -15 13 30 13 -30 13 30 13 -30 27 15"/></g>
+  <g class="component pickup-component"><circle cx="100" cy="171" r="22"/><path d="M84 171 q8 -15 16 0 q8 15 16 0"/><path d="M135 120 l11 -15 13 30 13 -30 13 30 13 -30 27 15"/></g>
   <g class="wire"><line x1="100" y1="120" x2="100" y2="149"/><line x1="100" y1="193" x2="100" y2="222"/></g>
-  <g class="component"><path d="M280 120 l11 -15 13 30 13 -30 13 30 13 -30 27 15"/><path d="M415 120 q10 -28 20 0 q10 28 20 0 q10 -28 20 0 q10 28 20 0 q10 -28 20 0"/><path d="M650 120 v35 m-17 0 h34 m-34 13 h34 m-17 0 v54"/><path d="M850 120 v24 l-13 9 26 13 -26 13 26 13 -13 9 v21"/></g>
+  <g class="component cable-component"><path d="M280 120 l11 -15 13 30 13 -30 13 30 13 -30 27 15"/><path d="M415 120 q10 -28 20 0 q10 28 20 0 q10 -28 20 0 q10 28 20 0 q10 -28 20 0"/><path d="M650 120 v35 m-17 0 h34 m-34 13 h34 m-17 0 v54"/></g><g class="component amp-component"><path d="M850 120 v24 l-13 9 26 13 -26 13 26 13 -13 9 v21"/></g>
   <g class="node"><circle cx="650" cy="120" r="5"/><circle cx="850" cy="120" r="5"/></g>
   <g><text x="65" y="260">V<tspan baseline-shift="sub">source</tspan></text><text x="156" y="82">R<tspan baseline-shift="sub">out</tspan></text><text class="value" x="150" y="102">${v("sourceR", "Ω")}</text><text x="300" y="82">R<tspan baseline-shift="sub">cable</tspan></text><text class="value" x="298" y="102">${v("cableR", "Ω")}</text><text x="448" y="82">L<tspan baseline-shift="sub">cable</tspan></text><text class="value" x="438" y="102">${v("cableL", "H")}</text><text x="675" y="161">C<tspan baseline-shift="sub">cable</tspan></text><text class="value" x="675" y="185">${v("cableC", "F")}</text><text x="870" y="158">R<tspan baseline-shift="sub">in</tspan></text><text class="value" x="870" y="182">${v("loadR", "Ω")}</text><text x="875" y="104">V<tspan baseline-shift="sub">out</tspan></text></g>`;
 }
@@ -242,7 +235,6 @@ function updateGuitar() {
   $("gSummary").textContent = `Peak ${Math.round(info.peakFrequency).toLocaleString()} Hz / ${info.peakDb.toFixed(1)} dB`;
   const ideal = 1 / (2 * Math.PI * Math.sqrt(guitar.pickupL * (guitar.cableC + guitar.ampInputC)));
   $("gExplain").textContent = `Lと対地容量だけから見積もる無損失共振は約${Math.round(ideal).toLocaleString()} Hz。実際のピークは、DCR・Volume・Tone・アンプ入力がQと周波数を変えるため一致しません。`;
-  updateSmith();
 }
 
 function updateLine() {
@@ -255,66 +247,6 @@ function updateLine() {
   const divisionDb = dB(dcGain);
   $("lSummary").textContent = info.cutoff ? `−3 dB帯域 ≈ ${Math.round(info.cutoff).toLocaleString()} Hz` : "20 kHz内に追加の−3 dB点なし";
   $("lExplain").textContent = `低周波でも抵抗分圧により ${divisionDb.toFixed(2)} dB。出力抵抗とケーブル容量が作る極が可聴帯域へ入ると、高域減衰が加わります。`;
-  updateSmith();
-}
-
-function drawSmith() {
-  const canvas = $("smithPlot");
-  if (!canvas || $("panel-smith").hidden) return;
-  const { ctx, width: W, height: H } = canvasSetup(canvas);
-  const size = Math.min(W - 36, H - 36);
-  const cx = W / 2, cy = H / 2, r = size / 2;
-  const map = (g) => ({ x: cx + g.re * r, y: cy - g.im * r });
-  ctx.clearRect(0, 0, W, H);
-  ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.clip();
-  ctx.strokeStyle = css("--grid"); ctx.lineWidth = 1;
-  const resistance = [0, .2, .5, 1, 2, 5];
-  resistance.forEach((rv) => {
-    const ccx = cx + r * rv / (1 + rv), rr = r / (1 + rv);
-    ctx.beginPath(); ctx.arc(ccx, cy, rr, 0, Math.PI * 2); ctx.stroke();
-  });
-  [.2, .5, 1, 2, 5].forEach((xv) => {
-    [1, -1].forEach((sign) => {
-      const ccy = cy - sign * r / xv, rr = r / xv;
-      ctx.beginPath(); ctx.arc(cx + r, ccy, rr, 0, Math.PI * 2); ctx.stroke();
-    });
-  });
-  ctx.restore();
-  ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.strokeStyle = css("--ink"); ctx.lineWidth = 2; ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(cx - r, cy); ctx.lineTo(cx + r, cy); ctx.strokeStyle = css("--grid"); ctx.lineWidth = 1; ctx.stroke();
-  const z0 = z0Value();
-  const gammas = frequencies.map((f) => {
-    const z = lineInputImpedance(line, f);
-    return div(add(z, complex(-z0, 0)), add(z, complex(z0, 0)));
-  });
-  ctx.beginPath();
-  gammas.forEach((g, i) => { const p = map(g); i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y); });
-  ctx.strokeStyle = css("--accent"); ctx.lineWidth = 3; ctx.stroke();
-  const idx = Number($("cursorFreq").value);
-  const p = map(gammas[idx]);
-  ctx.beginPath(); ctx.arc(p.x, p.y, 6, 0, Math.PI * 2); ctx.fillStyle = css("--warm"); ctx.fill();
-  ctx.font = "12px system-ui"; ctx.fillStyle = css("--muted"); ctx.textAlign = "center";
-  ctx.fillText("0", cx, cy + 17); ctx.fillText("∞", cx + r - 10, cy + 17); ctx.fillText("short", cx - r + 21, cy + 17);
-}
-
-function z0Value() {
-  const t = Number($("z0").value);
-  return 10 * Math.pow(10000, t);
-}
-
-function updateSmith() {
-  if (!$("z0")) return;
-  const z0 = z0Value();
-  const idx = Number($("cursorFreq").value);
-  const f = frequencies[idx];
-  const z = lineInputImpedance(line, f);
-  const gamma = div(add(z, complex(-z0, 0)), add(z, complex(z0, 0)));
-  const gm = Math.min(.999999, magnitude(gamma));
-  const vswr = (1 + gm) / (1 - gm);
-  $("z0Out").textContent = formatValue(z0, "Ω");
-  $("cursorOut").textContent = `${Math.round(f).toLocaleString()} Hz`;
-  $("smithReadout").innerHTML = `<div><b>Zin</b> = ${formatValue(z.re, "Ω")} ${z.im >= 0 ? "+" : "−"} j${formatValue(Math.abs(z.im), "Ω")}</div><div><b>|Γ|</b> = ${magnitude(gamma).toFixed(3)}　∠ ${phaseDeg(gamma).toFixed(1)}°</div><div><b>VSWR</b> = ${vswr > 999 ? "> 999" : vswr.toFixed(2)}</div>`;
-  drawSmith();
 }
 
 function applyGuitarPreset(name) {
@@ -332,13 +264,13 @@ function applyLinePreset(name) {
 }
 
 function switchTab(tab) {
-  ["guitar", "line", "smith"].forEach((name) => {
+  ["guitar", "line"].forEach((name) => {
     const active = name === tab;
     $(`tab-${name}`).classList.toggle("is-active", active);
     $(`tab-${name}`).setAttribute("aria-selected", String(active));
     $(`panel-${name}`).hidden = !active;
   });
-  requestAnimationFrame(() => { if (tab === "guitar") updateGuitar(); if (tab === "line") updateLine(); if (tab === "smith") updateSmith(); });
+  requestAnimationFrame(() => { if (tab === "guitar") updateGuitar(); if (tab === "line") updateLine(); });
 }
 
 createControls($("gControls"), guitarDefs, guitar, updateGuitar);
@@ -347,18 +279,16 @@ $("gPreset").addEventListener("change", (e) => applyGuitarPreset(e.target.value)
 $("lPreset").addEventListener("change", (e) => applyLinePreset(e.target.value));
 $("gReset").addEventListener("click", () => applyGuitarPreset($("gPreset").value));
 $("lReset").addEventListener("click", () => applyLinePreset($("lPreset").value));
-["guitar", "line", "smith"].forEach((name) => $(`tab-${name}`).addEventListener("click", () => switchTab(name)));
-$("z0").addEventListener("input", updateSmith);
-$("cursorFreq").addEventListener("input", updateSmith);
+["guitar", "line"].forEach((name) => $(`tab-${name}`).addEventListener("click", () => switchTab(name)));
 $("themeButton").addEventListener("click", () => {
   const dark = document.documentElement.dataset.theme === "dark";
   document.documentElement.dataset.theme = dark ? "light" : "dark";
-  updateGuitar(); updateLine(); updateSmith();
+  updateGuitar(); updateLine();
 });
 
 const observer = new ResizeObserver(() => {
   clearTimeout(observer.timer);
-  observer.timer = setTimeout(() => { updateGuitar(); updateLine(); updateSmith(); }, 80);
+  observer.timer = setTimeout(() => { updateGuitar(); updateLine(); }, 80);
 });
 observer.observe(document.body);
 updateGuitar();

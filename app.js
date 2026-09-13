@@ -16,37 +16,50 @@ const logspace = (start, end, count) => Array.from({ length: count }, (_, i) => 
 const frequencies = logspace(20, 20000, 401);
 
 const guitarDefs = [
-  { key: "pickupR", label: "Pickup DCR", unit: "Ω", min: 2000, max: 15000, step: 100, scale: "linear" },
-  { key: "pickupL", label: "Pickup L", unit: "H", min: 0.5, max: 8, step: 0.1, scale: "linear" },
-  { key: "volumeR", label: "Volume pot", unit: "Ω", min: 100000, max: 1000000, step: 10000, scale: "linear" },
-  { key: "toneR", label: "Tone pot", unit: "Ω", min: 0, max: 500000, step: 5000, scale: "linear" },
-  { key: "toneC", label: "Tone capacitor", unit: "F", min: 10e-9, max: 100e-9, step: 1e-9, scale: "linear" },
-  { key: "cableC", label: "Cable capacitance", unit: "F", min: 50e-12, max: 2000e-12, step: 10e-12, scale: "linear" },
-  { key: "ampSeriesR", label: "Amp series R", unit: "Ω", min: 0, max: 100000, step: 1000, scale: "linear" },
-  { key: "ampInputR", label: "Amp input R", unit: "Ω", min: 50000, max: 2000000, step: 10000, scale: "linear" },
-  { key: "ampInputC", label: "Amp input C", unit: "F", min: 0, max: 1000e-12, step: 5e-12, scale: "linear" }
+  { key: "pickupR", label: "Pickup DCR", unit: "Ω", min: 2000, max: 15000, step: 100 },
+  { key: "pickupL", label: "Pickup inductance", unit: "H", min: 0.5, max: 8, step: 0.1 },
+  { key: "pickupC", label: "Pickup self C", unit: "F", min: 15e-12, max: 300e-12, step: 5e-12 },
+  { key: "pickupLossR", label: "Pickup loss R", unit: "Ω", min: 300000, max: 3000000, step: 50000 },
+  { key: "volumeR", label: "Volume pot value", unit: "Ω", min: 100000, max: 1000000, step: 10000 },
+  { key: "volumePosition", label: "Volume knob", unit: "knob", min: 0, max: 10, step: 0.1 },
+  { key: "toneR", label: "Tone pot value", unit: "Ω", min: 100000, max: 1000000, step: 10000 },
+  { key: "tonePosition", label: "Tone knob", unit: "knob", min: 0, max: 10, step: 0.1 },
+  { key: "toneC", label: "Tone capacitor", unit: "F", min: 10e-9, max: 100e-9, step: 1e-9 },
+  { key: "cableLength", label: "Cable length", unit: "m", min: 0.5, max: 20, step: 0.5 },
+  { key: "cableCapPerM", label: "Cable capacitance", unit: "F/m", min: 50e-12, max: 200e-12, step: 5e-12 },
+  { key: "ampInputR", label: "Amp input R", unit: "Ω", min: 50000, max: 2000000, step: 10000 },
+  { key: "ampSeriesR", label: "Grid stopper R", unit: "Ω", min: 0, max: 100000, step: 1000 },
+  { key: "ampInputC", label: "Effective input C", unit: "F", min: 10e-12, max: 500e-12, step: 5e-12 }
 ];
 
 const lineDefs = [
   { key: "sourceR", label: "Source Rout", unit: "Ω", min: 10, max: 200000, step: 10, scale: "log" },
   { key: "loadR", label: "Load Rin", unit: "Ω", min: 100, max: 2000000, step: 100, scale: "log" },
-  { key: "cableR", label: "Cable series R", unit: "Ω", min: 0, max: 100, step: 0.1, scale: "linear" },
-  { key: "cableL", label: "Cable series L", unit: "H", min: 0, max: 100e-6, step: 0.5e-6, scale: "linear" },
-  { key: "cableC", label: "Cable shunt C", unit: "F", min: 10e-12, max: 3000e-12, step: 10e-12, scale: "linear" }
+  { key: "cableLength", label: "Cable length", unit: "m", min: 0.5, max: 20, step: 0.5 },
+  { key: "cableResPerM", label: "Cable R / m", unit: "Ω/m", min: 0, max: 1, step: 0.01 },
+  { key: "cableIndPerM", label: "Cable L / m", unit: "H/m", min: 0, max: 2e-6, step: 0.05e-6 },
+  { key: "cableCapPerM", label: "Cable C / m", unit: "F/m", min: 50e-12, max: 200e-12, step: 5e-12 }
 ];
 
 const guitarPresets = {
-  strat: { pickupR: 5000, pickupL: 3, volumeR: 250000, toneR: 250000, toneC: 47e-9, cableC: 500e-12, ampSeriesR: 34000, ampInputR: 1e6, ampInputC: 100e-12 },
-  paf: { pickupR: 7500, pickupL: 5, volumeR: 500000, toneR: 500000, toneC: 22e-9, cableC: 500e-12, ampSeriesR: 68000, ampInputR: 1e6, ampInputC: 100e-12 }
+  "strat-general": { pickupR: 6000, pickupL: 2.5, pickupC: 100e-12, pickupLossR: 1e6, volumeR: 250000, volumePosition: 10, toneR: 250000, tonePosition: 10, toneC: 47e-9, cableLength: 3, cableCapPerM: 100e-12, ampSeriesR: 34000, ampInputR: 1e6, ampInputC: 100e-12 },
+  "fender-57-62": { pickupR: 5400, pickupL: 2.1, pickupC: 100e-12, pickupLossR: 1e6, volumeR: 250000, volumePosition: 10, toneR: 250000, tonePosition: 10, toneC: 47e-9, cableLength: 3, cableCapPerM: 100e-12, ampSeriesR: 34000, ampInputR: 1e6, ampInputC: 100e-12 },
+  "paf-general": { pickupR: 7500, pickupL: 5, pickupC: 100e-12, pickupLossR: 1e6, volumeR: 500000, volumePosition: 10, toneR: 500000, tonePosition: 10, toneC: 22e-9, cableLength: 3, cableCapPerM: 100e-12, ampSeriesR: 68000, ampInputR: 1e6, ampInputC: 100e-12 }
+};
+
+const guitarPresetNotes = {
+  "strat-general": "一般的なStratタイプの例示値です。特定製品の完全な再現ではありません。",
+  "fender-57-62": "DCR 5.4 kΩ・L 2.1 HのみFender公称値。その他は例示値です。",
+  "paf-general": "一般的なPAFタイプの例示値です。特定製品の完全な再現ではありません。"
 };
 
 const linePresets = {
-  "low-high": { sourceR: 100, loadR: 100000, cableR: 1, cableL: 5e-6, cableC: 500e-12 },
-  "high-low": { sourceR: 100000, loadR: 10000, cableR: 1, cableL: 5e-6, cableC: 500e-12 },
-  guitar: { sourceR: 10000, loadR: 1e6, cableR: 1, cableL: 5e-6, cableC: 500e-12 }
+  "low-high": { sourceR: 100, loadR: 100000, cableLength: 3, cableResPerM: 0.1, cableIndPerM: 0.5e-6, cableCapPerM: 100e-12 },
+  "high-low": { sourceR: 100000, loadR: 10000, cableLength: 3, cableResPerM: 0.1, cableIndPerM: 0.5e-6, cableCapPerM: 100e-12 },
+  guitar: { sourceR: 10000, loadR: 1e6, cableLength: 3, cableResPerM: 0.1, cableIndPerM: 0.5e-6, cableCapPerM: 100e-12 }
 };
 
-let guitar = { ...guitarPresets.strat };
+let guitar = { ...guitarPresets["strat-general"] };
 let line = { ...linePresets["low-high"] };
 let guitarBaseline = { ...guitar };
 let lineBaseline = { ...line };
@@ -67,6 +80,11 @@ function formatValue(value, unit) {
     if (value >= 1e3) return `${trim(value / 1e3)} kΩ`;
     return `${trim(value)} Ω`;
   }
+  if (unit === "F/m") return `${formatValue(value, "F")}/m`;
+  if (unit === "H/m") return `${formatValue(value, "H")}/m`;
+  if (unit === "Ω/m") return `${formatValue(value, "Ω")}/m`;
+  if (unit === "m") return `${trim(value)} m`;
+  if (unit === "knob") return `${Number(value).toFixed(1)} / 10`;
   return trim(value);
 }
 
@@ -124,40 +142,60 @@ function refreshControls(host, defs, state) {
 function guitarTransfer(params, f) {
   const w = 2 * Math.PI * f;
   const source = complex(params.pickupR, w * params.pickupL);
-  const tone = add(complex(params.toneR, 0), complex(0, -1 / (w * params.toneC)));
-  const cable = complex(0, -1 / (w * params.cableC));
-  const ampZ = params.ampInputC > 0
-    ? parallel(complex(params.ampInputR, 0), complex(0, -1 / (w * params.ampInputC)))
-    : complex(params.ampInputR, 0);
-  const ampBranch = add(complex(params.ampSeriesR, 0), ampZ);
-  const nodeLoad = parallel(complex(params.volumeR, 0), tone, cable, ampBranch);
-  const nodeV = div(nodeLoad, add(source, nodeLoad));
-  return mul(nodeV, div(ampZ, ampBranch));
+  const audioTaper = (position) => position <= 0 ? 0 : Math.pow(10, (position - 10) / 5);
+  const volumeFraction = audioTaper(params.volumePosition);
+  if (volumeFraction === 0) return complex(0, 0);
+  const volumeBottom = params.volumeR * volumeFraction;
+  const volumeTop = params.volumeR - volumeBottom;
+  const toneResistance = params.toneR * audioTaper(params.tonePosition);
+  const tone = add(complex(toneResistance, 0), complex(0, -1 / (w * params.toneC)));
+  const pickupSelfC = complex(0, -1 / (w * params.pickupC));
+  const cableC = params.cableLength * params.cableCapPerM;
+  const cable = complex(0, -1 / (w * cableC));
+  const inputC = complex(0, -1 / (w * params.ampInputC));
+  const gridBranch = add(complex(params.ampSeriesR, 0), inputC);
+  const wiperLoad = parallel(complex(volumeBottom, 0), cable, complex(params.ampInputR, 0), gridBranch);
+  const pickupLoad = parallel(pickupSelfC, complex(params.pickupLossR, 0), tone, add(complex(volumeTop, 0), wiperLoad));
+  const pickupHotV = div(pickupLoad, add(source, pickupLoad));
+  const wiperV = mul(pickupHotV, div(wiperLoad, add(complex(volumeTop, 0), wiperLoad)));
+  return mul(wiperV, div(inputC, gridBranch));
+}
+
+function lineTotals(params) {
+  return {
+    cableR: params.cableLength * params.cableResPerM,
+    cableL: params.cableLength * params.cableIndPerM,
+    cableC: params.cableLength * params.cableCapPerM
+  };
 }
 
 function lineTransfer(params, f) {
   const w = 2 * Math.PI * f;
-  const load = parallel(complex(params.loadR, 0), complex(0, -1 / (w * params.cableC)));
-  const series = complex(params.sourceR + params.cableR, w * params.cableL);
+  const cable = lineTotals(params);
+  const load = parallel(complex(params.loadR, 0), complex(0, -1 / (w * cable.cableC)));
+  const series = complex(params.sourceR + cable.cableR, w * cable.cableL);
   return div(load, add(series, load));
 }
 
 function guitarCircuitSvg() {
   const v = (key, unit) => formatValue(guitar[key], unit);
+  const cableC = guitar.cableLength * guitar.cableCapPerM;
   return `
-  <g class="group-label"><text x="55" y="28">PICKUP</text><text x="335" y="28">GUITAR CONTROLS</text><text x="610" y="28">CABLE</text><text x="790" y="28">AMPLIFIER INPUT</text></g>
-  <g class="wire"><line x1="40" y1="118" x2="78" y2="118"/><line x1="78" y1="225" x2="930" y2="225"/><line x1="40" y1="118" x2="40" y2="225"/><line x1="78" y1="118" x2="108" y2="118"/><line x1="183" y1="118" x2="210" y2="118"/><line x1="287" y1="118" x2="850" y2="118"/></g>
-  <g class="component pickup-component"><circle cx="78" cy="171" r="21"/><path d="M63 171 q7 -15 15 0 q8 15 15 0"/><path d="M108 118 q8 -25 16 0 q8 25 16 0 q8 -25 16 0 q8 25 16 0 q8 -25 16 0"/><path d="M210 118 l10 -14 12 28 12 -28 12 28 12 -28 19 14"/></g>
-  <g class="wire"><line x1="78" y1="118" x2="78" y2="150"/><line x1="78" y1="192" x2="78" y2="225"/></g>
-  <g class="component control-component"><path d="M430 118 v20 l-12 8 24 12 -24 12 24 12 -12 8 v8"/><path d="M430 198 v5 m-15 0 h30 m-30 12 h30 m-15 0 v10"/></g><g class="component cable-component"><path d="M645 118 v35 m-15 0 h30 m-30 12 h30 m-15 0 v60"/></g><g class="component amp-component"><path d="M760 118 l10 -14 12 28 12 -28 12 28 12 -28 12 14"/><path d="M850 118 v28 l-12 8 24 12 -24 12 24 12 -12 8 v27"/></g>
-  <g class="wire"><line x1="287" y1="118" x2="287" y2="225"/><line x1="850" y1="118" x2="930" y2="118"/></g>
-  <g class="component control-component"><path d="M287 142 l-12 8 24 12 -24 12 24 12 -12 8"/></g><g class="component amp-component"><path d="M930 118 v28 l-12 8 24 12 -24 12 24 12 -12 8 v27"/></g>
-  <g class="node"><circle cx="287" cy="118" r="5"/><circle cx="645" cy="118" r="5"/><circle cx="850" cy="118" r="5"/></g>
-  <g><text x="45" y="260">V<tspan baseline-shift="sub">pickup</tspan></text><text x="122" y="82">L<tspan baseline-shift="sub">p</tspan></text><text class="value" x="115" y="101">${v("pickupL", "H")}</text><text x="220" y="82">DCR</text><text class="value" x="214" y="101">${v("pickupR", "Ω")}</text><text x="302" y="160">Volume</text><text class="value" x="302" y="181">${v("volumeR", "Ω")}</text><text x="452" y="148">Tone</text><text class="value" x="452" y="171">${v("toneR", "Ω")}</text><text class="value" x="452" y="214">${v("toneC", "F")}</text><text x="602" y="144">Cable C</text><text class="value" x="598" y="207">${v("cableC", "F")}</text><text x="760" y="80">R<tspan baseline-shift="sub">series</tspan></text><text class="value" x="755" y="100">${v("ampSeriesR", "Ω")}</text><text x="868" y="156">C<tspan baseline-shift="sub">in</tspan></text><text class="value" x="865" y="178">${v("ampInputC", "F")}</text><text x="890" y="244">R<tspan baseline-shift="sub">in</tspan> ${v("ampInputR", "Ω")}</text><text x="920" y="102">V<tspan baseline-shift="sub">out</tspan></text></g>`;
+  <g class="group-label"><text x="55" y="28">PICKUP</text><text x="515" y="28">GUITAR CONTROLS</text><text x="755" y="28">CABLE</text><text x="900" y="28">AMPLIFIER INPUT</text></g>
+  <g class="wire"><line x1="45" y1="105" x2="90" y2="105"/><line x1="45" y1="105" x2="45" y2="300"/><line x1="45" y1="300" x2="1130" y2="300"/><line x1="180" y1="105" x2="215" y2="105"/><line x1="300" y1="105" x2="665" y2="105"/><line x1="665" y1="105" x2="665" y2="180"/><line x1="690" y1="180" x2="930" y2="180"/></g>
+  <g class="component pickup-component"><circle cx="90" cy="202" r="23"/><path d="M73 202 q8 -16 17 0 q8 16 17 0"/><path d="M90 105 q9 -26 18 0 q9 26 18 0 q9 -26 18 0 q9 26 18 0 q9 -26 18 0"/><path d="M215 105 l11 -15 13 30 13 -30 13 30 13 -30 22 15"/></g>
+  <g class="wire"><line x1="90" y1="105" x2="90" y2="179"/><line x1="90" y1="225" x2="90" y2="300"/><line x1="355" y1="105" x2="355" y2="150"/><line x1="355" y1="165" x2="355" y2="300"/><line x1="435" y1="105" x2="435" y2="133"/><line x1="435" y1="210" x2="435" y2="300"/><line x1="535" y1="105" x2="535" y2="132"/><line x1="535" y1="210" x2="535" y2="232"/><line x1="535" y1="247" x2="535" y2="300"/></g>
+  <g class="component pickup-component"><path d="M338 150 h34 m-34 15 h34"/><path d="M435 133 l-12 10 24 13 -24 13 24 13 -24 13 12 15"/></g>
+  <g class="component control-component"><path d="M535 132 l-12 10 24 13 -24 13 24 13 -24 13 12 16"/><path d="M518 232 h34 m-34 15 h34"/><path d="M665 105 l-12 12 24 16 -24 16 24 16 -12 15"/><path d="M690 180 l-27 18 m0 0 8 -17 m-8 17 18 -2"/></g>
+  <g class="wire"><line x1="665" y1="210" x2="665" y2="300"/><line x1="790" y1="180" x2="790" y2="220"/><line x1="790" y1="235" x2="790" y2="300"/><line x1="885" y1="180" x2="885" y2="205"/><line x1="885" y1="280" x2="885" y2="300"/><line x1="1030" y1="180" x2="1065" y2="180"/><line x1="1065" y1="180" x2="1065" y2="220"/><line x1="1065" y1="235" x2="1065" y2="300"/></g>
+  <g class="component control-component"><path d="M665 180 l-12 10 24 10 -12 10"/></g><g class="component cable-component"><path d="M773 220 h34 m-34 15 h34"/></g><g class="component amp-component"><path d="M885 205 l-12 10 24 13 -24 13 24 13 -12 16"/><path d="M930 180 l10 -14 13 28 13 -28 13 28 13 -28 38 14"/><path d="M1048 220 h34 m-34 15 h34"/></g>
+  <g class="node"><circle cx="300" cy="105" r="5"/><circle cx="690" cy="180" r="5"/><circle cx="885" cy="180" r="5"/><circle cx="1065" cy="180" r="5"/></g>
+  <g><text x="52" y="335">internal EMF</text><text x="115" y="66">L<tspan baseline-shift="sub">p</tspan></text><text class="value" x="105" y="87">${v("pickupL", "H")}</text><text x="230" y="66">DCR</text><text class="value" x="220" y="87">${v("pickupR", "Ω")}</text><text x="315" y="202">C<tspan baseline-shift="sub">p</tspan> ${v("pickupC", "F")}</text><text x="392" y="235">R<tspan baseline-shift="sub">loss</tspan></text><text class="value" x="392" y="257">${v("pickupLossR", "Ω")}</text><text x="480" y="218">Tone ${v("toneR", "Ω")}</text><text class="value" x="477" y="272">${v("tonePosition", "knob")} / ${v("toneC", "F")}</text><text x="595" y="225">Volume ${v("volumeR", "Ω")}</text><text class="value" x="602" y="247">${v("volumePosition", "knob")}</text><text x="735" y="212">Cable C</text><text class="value" x="730" y="260">${formatValue(cableC, "F")}</text><text x="845" y="238">R<tspan baseline-shift="sub">in</tspan></text><text class="value" x="838" y="261">${v("ampInputR", "Ω")}</text><text x="944" y="143">Grid stopper</text><text class="value" x="945" y="162">${v("ampSeriesR", "Ω")}</text><text x="1085" y="224">C<tspan baseline-shift="sub">in</tspan></text><text class="value" x="1085" y="247">${v("ampInputC", "F")}</text><text x="1080" y="166">V<tspan baseline-shift="sub">grid</tspan></text></g>`;
 }
 
 function lineCircuitSvg() {
   const v = (key, unit) => formatValue(line[key], unit);
+  const totals = lineTotals(line);
   return `
   <g class="group-label"><text x="55" y="30">SOURCE</text><text x="310" y="30">CABLE</text><text x="760" y="30">LOAD</text></g>
   <g class="wire"><line x1="55" y1="120" x2="100" y2="120"/><line x1="100" y1="222" x2="900" y2="222"/><line x1="55" y1="120" x2="55" y2="222"/><line x1="100" y1="120" x2="135" y2="120"/><line x1="225" y1="120" x2="280" y2="120"/><line x1="370" y1="120" x2="415" y2="120"/><line x1="515" y1="120" x2="850" y2="120"/></g>
@@ -165,7 +203,7 @@ function lineCircuitSvg() {
   <g class="wire"><line x1="100" y1="120" x2="100" y2="149"/><line x1="100" y1="193" x2="100" y2="222"/></g>
   <g class="component cable-component"><path d="M280 120 l11 -15 13 30 13 -30 13 30 13 -30 27 15"/><path d="M415 120 q10 -28 20 0 q10 28 20 0 q10 -28 20 0 q10 28 20 0 q10 -28 20 0"/><path d="M650 120 v35 m-17 0 h34 m-34 13 h34 m-17 0 v54"/></g><g class="component amp-component"><path d="M850 120 v24 l-13 9 26 13 -26 13 26 13 -13 9 v21"/></g>
   <g class="node"><circle cx="650" cy="120" r="5"/><circle cx="850" cy="120" r="5"/></g>
-  <g><text x="65" y="260">V<tspan baseline-shift="sub">source</tspan></text><text x="156" y="82">R<tspan baseline-shift="sub">out</tspan></text><text class="value" x="150" y="102">${v("sourceR", "Ω")}</text><text x="300" y="82">R<tspan baseline-shift="sub">cable</tspan></text><text class="value" x="298" y="102">${v("cableR", "Ω")}</text><text x="448" y="82">L<tspan baseline-shift="sub">cable</tspan></text><text class="value" x="438" y="102">${v("cableL", "H")}</text><text x="675" y="161">C<tspan baseline-shift="sub">cable</tspan></text><text class="value" x="675" y="185">${v("cableC", "F")}</text><text x="870" y="158">R<tspan baseline-shift="sub">in</tspan></text><text class="value" x="870" y="182">${v("loadR", "Ω")}</text><text x="875" y="104">V<tspan baseline-shift="sub">out</tspan></text></g>`;
+  <g><text x="65" y="260">V<tspan baseline-shift="sub">source</tspan></text><text x="156" y="82">R<tspan baseline-shift="sub">out</tspan></text><text class="value" x="150" y="102">${v("sourceR", "Ω")}</text><text x="300" y="82">R<tspan baseline-shift="sub">cable</tspan></text><text class="value" x="298" y="102">${formatValue(totals.cableR, "Ω")}</text><text x="448" y="82">L<tspan baseline-shift="sub">cable</tspan></text><text class="value" x="438" y="102">${formatValue(totals.cableL, "H")}</text><text x="675" y="161">C<tspan baseline-shift="sub">cable</tspan></text><text class="value" x="675" y="185">${formatValue(totals.cableC, "F")}</text><text x="870" y="158">R<tspan baseline-shift="sub">in</tspan></text><text class="value" x="870" y="182">${v("loadR", "Ω")}</text><text x="875" y="104">V<tspan baseline-shift="sub">out</tspan></text><text x="330" y="260">長さ ${v("cableLength", "m")} × 単位長定数</text></g>`;
 }
 
 function canvasSetup(canvas) {
@@ -233,8 +271,9 @@ function updateGuitar() {
   drawFrequencyPlot($("gPlot"), current, base);
   const info = peakInfo(current);
   $("gSummary").textContent = `Peak ${Math.round(info.peakFrequency).toLocaleString()} Hz / ${info.peakDb.toFixed(1)} dB`;
-  const ideal = 1 / (2 * Math.PI * Math.sqrt(guitar.pickupL * (guitar.cableC + guitar.ampInputC)));
-  $("gExplain").textContent = `Lと対地容量だけから見積もる無損失共振は約${Math.round(ideal).toLocaleString()} Hz。実際のピークは、DCR・Volume・Tone・アンプ入力がQと周波数を変えるため一致しません。`;
+  const totalCap = guitar.pickupC + guitar.cableLength * guitar.cableCapPerM + guitar.ampInputC;
+  const ideal = 1 / (2 * Math.PI * Math.sqrt(guitar.pickupL * totalCap));
+  $("gExplain").textContent = `これは弦・ボディ・スピーカーを含まない電気的伝達特性 Vgrid / 内部EMF です。Lと対地容量から見積もる無損失共振は約${Math.round(ideal).toLocaleString()} Hz。DCR・損失抵抗・ポット位置・アンプ入力が実際のピークを変えます。`;
 }
 
 function updateLine() {
@@ -243,16 +282,18 @@ function updateLine() {
   const base = frequencies.map((f) => dB(magnitude(lineTransfer(lineBaseline, f))));
   drawFrequencyPlot($("lPlot"), current, base);
   const info = peakInfo(current);
-  const dcGain = line.loadR / (line.sourceR + line.cableR + line.loadR);
+  const totals = lineTotals(line);
+  const dcGain = line.loadR / (line.sourceR + totals.cableR + line.loadR);
   const divisionDb = dB(dcGain);
   $("lSummary").textContent = info.cutoff ? `−3 dB帯域 ≈ ${Math.round(info.cutoff).toLocaleString()} Hz` : "20 kHz内に追加の−3 dB点なし";
-  $("lExplain").textContent = `低周波でも抵抗分圧により ${divisionDb.toFixed(2)} dB。出力抵抗とケーブル容量が作る極が可聴帯域へ入ると、高域減衰が加わります。`;
+  $("lExplain").textContent = `${formatValue(line.cableLength, "m")}の合計は R ${formatValue(totals.cableR, "Ω")} / L ${formatValue(totals.cableL, "H")} / C ${formatValue(totals.cableC, "F")}。低周波の抵抗分圧は ${divisionDb.toFixed(2)} dBです。`;
 }
 
 function applyGuitarPreset(name) {
   Object.assign(guitar, guitarPresets[name]);
   guitarBaseline = { ...guitar };
   refreshControls($("gControls"), guitarDefs, guitar);
+  $("gPresetNote").textContent = guitarPresetNotes[name];
   updateGuitar();
 }
 
@@ -293,3 +334,4 @@ const observer = new ResizeObserver(() => {
 observer.observe(document.body);
 updateGuitar();
 updateLine();
+$("gPresetNote").textContent = guitarPresetNotes[$("gPreset").value];

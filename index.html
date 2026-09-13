@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="ギターとオーディオ配線のインピーダンス・周波数特性を回路図とともに学べるブラウザシミュレータ">
+  <title>Audio Impedance Lab</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div>
+      <p class="eyebrow">Interactive circuit explorer</p>
+      <h1>Audio Impedance Lab</h1>
+      <p class="lead">定数を動かして、回路・周波数特性・インピーダンスのつながりを見る。</p>
+    </div>
+    <button id="themeButton" class="quiet-button" type="button" aria-label="配色を切り替える">配色切替</button>
+  </header>
+
+  <main>
+    <nav class="tabs" aria-label="表示モード" role="tablist">
+      <button class="tab is-active" id="tab-guitar" type="button" role="tab" aria-selected="true" aria-controls="panel-guitar">ギター等価回路</button>
+      <button class="tab" id="tab-line" type="button" role="tab" aria-selected="false" aria-controls="panel-line">接続とケーブル</button>
+      <button class="tab" id="tab-smith" type="button" role="tab" aria-selected="false" aria-controls="panel-smith">Smith chart</button>
+    </nav>
+
+    <section id="panel-guitar" class="mode-panel" role="tabpanel" aria-labelledby="tab-guitar">
+      <div class="workspace">
+        <aside class="controls" aria-label="ギター回路の設定">
+          <div class="control-heading">
+            <h2>ギター回路</h2>
+            <select id="gPreset" aria-label="ギタープリセット">
+              <option value="strat">Stratocaster例</option>
+              <option value="paf">PAF例</option>
+            </select>
+          </div>
+          <div id="gControls"></div>
+          <button id="gReset" class="quiet-button full" type="button">初期値に戻す</button>
+        </aside>
+        <div class="visuals">
+          <article class="panel">
+            <div class="panel-title"><h2>連動する等価回路</h2><span>Volume最大位置の集中定数モデル</span></div>
+            <svg id="gCircuit" class="circuit" viewBox="0 0 980 310" role="img" aria-labelledby="gCircuitTitle gCircuitDesc">
+              <title id="gCircuitTitle">エレキギターとアンプ入力の等価回路</title>
+              <desc id="gCircuitDesc">ピックアップの電圧源、直列抵抗とインダクタンス、トーン回路、ボリューム、ケーブル容量、アンプ入力を示す。</desc>
+            </svg>
+          </article>
+          <article class="panel plot-panel">
+            <div class="panel-title"><h2>出力電圧の周波数特性</h2><span id="gSummary" aria-live="polite"></span></div>
+            <canvas id="gPlot" role="img" aria-label="ギター回路の周波数特性グラフ"></canvas>
+            <div class="legend"><span class="legend-live">現在値</span><span class="legend-base">初期値</span></div>
+          </article>
+          <p class="explanation" id="gExplain"></p>
+        </div>
+      </div>
+    </section>
+
+    <section id="panel-line" class="mode-panel" role="tabpanel" aria-labelledby="tab-line" hidden>
+      <div class="workspace">
+        <aside class="controls" aria-label="接続回路の設定">
+          <div class="control-heading">
+            <h2>Source → Cable → Load</h2>
+            <select id="lPreset" aria-label="接続プリセット">
+              <option value="low-high">ロー出し・ハイ受け</option>
+              <option value="high-low">ハイ出し・ロー受け</option>
+              <option value="guitar">ギター直結</option>
+            </select>
+          </div>
+          <div id="lControls"></div>
+          <button id="lReset" class="quiet-button full" type="button">初期値に戻す</button>
+        </aside>
+        <div class="visuals">
+          <article class="panel">
+            <div class="panel-title"><h2>接続モデル</h2><span>線路は集中定数 R・L・C で近似</span></div>
+            <svg id="lCircuit" class="circuit" viewBox="0 0 980 290" role="img" aria-labelledby="lCircuitTitle lCircuitDesc">
+              <title id="lCircuitTitle">信号源、ケーブル、負荷の等価回路</title>
+              <desc id="lCircuitDesc">出力抵抗、ケーブルの直列抵抗とインダクタンス、対地容量、入力抵抗を示す。</desc>
+            </svg>
+          </article>
+          <article class="panel plot-panel">
+            <div class="panel-title"><h2>伝達特性</h2><span id="lSummary" aria-live="polite"></span></div>
+            <canvas id="lPlot" role="img" aria-label="接続回路の周波数特性グラフ"></canvas>
+            <div class="legend"><span class="legend-live">現在値</span><span class="legend-base">初期値</span></div>
+          </article>
+          <p class="explanation" id="lExplain"></p>
+        </div>
+      </div>
+    </section>
+
+    <section id="panel-smith" class="mode-panel" role="tabpanel" aria-labelledby="tab-smith" hidden>
+      <div class="smith-layout">
+        <aside class="controls smith-controls" aria-label="Smith chartの設定">
+          <h2>基準インピーダンス</h2>
+          <label class="control-row">
+            <span><b>Z₀</b><output id="z0Out"></output></span>
+            <input id="z0" type="range" min="0" max="1" step="0.001" value="0.175">
+          </label>
+          <label class="control-row">
+            <span><b>観測周波数</b><output id="cursorOut"></output></span>
+            <input id="cursorFreq" type="range" min="0" max="400" step="1" value="226">
+          </label>
+          <div class="readout" id="smithReadout" aria-live="polite"></div>
+          <p class="note">「接続とケーブル」の現在値から、信号源側に見える入力インピーダンスを正規化して表示します。</p>
+        </aside>
+        <article class="panel smith-panel">
+          <div class="panel-title"><h2>正規化インピーダンス軌跡</h2><span>20 Hz → 20 kHz</span></div>
+          <canvas id="smithPlot" role="img" aria-label="入力インピーダンスのSmith chart"></canvas>
+        </article>
+      </div>
+      <p class="explanation smith-note">音声帯域の短いケーブルは通常、伝送線路ではなく集中定数として扱えます。ここでは同じ複素インピーダンスをRFで馴染みのある Γ 平面へ写し、見方の共通性を示しています。</p>
+    </section>
+
+    <section class="assumptions">
+      <h2>モデルの前提</h2>
+      <p>受動・線形・集中定数モデルです。ピックアップの磁気損失、ポットのワイパー位置、真空管の非線形性、長い伝送線路の分布定数は含めていません。したがって絶対的な音色の再現ではなく、定数変更による傾向の比較に向きます。</p>
+    </section>
+  </main>
+
+  <footer>
+    <span>Audio Impedance Lab</span>
+    <a href="https://www.arenaphysica.com/publications/smith-charts">Inspired by Arena Physica</a>
+  </footer>
+  <script src="app.js"></script>
+</body>
+</html>

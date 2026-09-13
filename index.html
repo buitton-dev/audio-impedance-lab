@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="ギターとオーディオ配線のインピーダンス・周波数特性を回路図とともに学べるブラウザシミュレータ">
+  <meta name="description" content="ギター、エフェクター出力、オーディオ配線の周波数特性を回路図とともに学べるブラウザシミュレータ">
   <title>Audio Impedance Lab</title>
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -21,6 +21,7 @@
     <nav class="tabs" aria-label="表示モード" role="tablist">
       <button class="tab is-active" id="tab-guitar" type="button" role="tab" aria-selected="true" aria-controls="panel-guitar">ギター等価回路</button>
       <button class="tab" id="tab-line" type="button" role="tab" aria-selected="false" aria-controls="panel-line">接続とケーブル</button>
+      <button class="tab" id="tab-effector" type="button" role="tab" aria-selected="false" aria-controls="panel-effector">エフェクター出力</button>
     </nav>
 
     <section id="panel-guitar" class="mode-panel" role="tabpanel" aria-labelledby="tab-guitar">
@@ -147,9 +148,76 @@
       </div>
     </section>
 
+    <section id="panel-effector" class="mode-panel" role="tabpanel" aria-labelledby="tab-effector" hidden>
+      <div class="workspace">
+        <aside class="controls" aria-label="エフェクター出力回路の設定">
+          <div class="control-heading">
+            <h2>Effector → Cable → Input</h2>
+            <select id="ePreset" aria-label="エフェクター出力プリセット">
+              <option value="buffered">標準バッファ出力</option>
+              <option value="small-cout">小容量Cout</option>
+              <option value="high-low">ハイ出し・ロー受け</option>
+            </select>
+          </div>
+          <p id="ePresetNote" class="preset-note"></p>
+          <div class="sub-control">
+            <label for="eCablePreset">ケーブルプリセット</label>
+            <select id="eCablePreset">
+              <option value="low-cap">低容量（70 pF/m）</option>
+              <option value="standard" selected>標準例（100 pF/m）</option>
+              <option value="gs6">Canare GS-6容量参考</option>
+              <option value="custom">カスタム</option>
+            </select>
+          </div>
+          <div id="eControls"></div>
+          <button id="eReset" class="quiet-button full" type="button">初期値に戻す</button>
+        </aside>
+        <div class="visuals">
+          <aside class="model-note">
+            <b>対地抵抗を入れる理由：</b>
+            R<sub>pull-down</sub>は出力端子のDC電位を安定させ、接続時のポップノイズを抑えるための抵抗です。C<sub>out</sub>と組み合わせると低域のハイパス特性にも関与します。ここではR<sub>out</sub>とは別の部品として扱います。
+          </aside>
+          <ol class="signal-story" aria-label="エフェクターから次段入力までの信号の流れ">
+            <li class="story-item pickup-stage">
+              <svg class="story-icon" viewBox="0 0 64 64" aria-hidden="true"><rect x="10" y="9" width="44" height="46" rx="6"/><circle cx="32" cy="23" r="7"/><path d="M20 43h24M25 50h14"/></svg>
+              <span><b>出力段</b><small>信号源と直列R<sub>out</sub></small></span>
+            </li>
+            <li class="story-arrow" aria-hidden="true">→</li>
+            <li class="story-item control-stage">
+              <svg class="story-icon" viewBox="0 0 64 64" aria-hidden="true"><path d="M8 32h15M27 17v30M37 17v30M41 32h15"/><path d="M48 38v14M43 52h10M45 56h6"/></svg>
+              <span><b>Cout＋対地抵抗</b><small>DC遮断と低域特性を決める</small></span>
+            </li>
+            <li class="story-arrow" aria-hidden="true">→</li>
+            <li class="story-item cable-stage">
+              <svg class="story-icon" viewBox="0 0 64 64" aria-hidden="true"><path d="M12 16v14c0 16 13 22 25 16s16-19 7-27"/><path d="M39 13l8 8M42 10l12 12"/><path d="M7 12h10v8H7z"/></svg>
+              <span><b>ケーブル</b><small>直列R・Lと対地C</small></span>
+            </li>
+            <li class="story-arrow" aria-hidden="true">→</li>
+            <li class="story-item amp-stage">
+              <svg class="story-icon" viewBox="0 0 64 64" aria-hidden="true"><rect x="9" y="11" width="46" height="42" rx="4"/><circle cx="32" cy="35" r="12"/><circle cx="17" cy="19" r="2"/><circle cx="24" cy="19" r="2"/></svg>
+              <span><b>次段の入力</b><small>入力抵抗R<sub>in</sub>で受ける</small></span>
+            </li>
+          </ol>
+          <article class="panel">
+            <div class="panel-title"><h2>エフェクター出力を電気回路に置き換えると</h2><span>CoutとRpull-downを独立して変更できます</span></div>
+            <svg id="eCircuit" class="circuit" viewBox="0 0 1180 320" role="img" aria-labelledby="eCircuitTitle eCircuitDesc">
+              <title id="eCircuitTitle">エフェクター出力、カップリングコンデンサ、対地抵抗、ケーブル、次段入力の等価回路</title>
+              <desc id="eCircuitDesc">内部電圧源、出力抵抗、直列出力カップリングコンデンサ、出力対地抵抗、ケーブルの直列抵抗とインダクタンスおよび対地容量、次段入力抵抗を示す。</desc>
+            </svg>
+          </article>
+          <article class="panel plot-panel">
+            <div class="panel-title"><h2>伝達特性（Vout / 内部信号源）</h2><span id="eSummary" aria-live="polite"></span></div>
+            <canvas id="ePlot" role="img" aria-label="エフェクター出力から次段入力までの周波数特性グラフ"></canvas>
+            <div class="legend"><span class="legend-live">現在値</span><span class="legend-base">初期値</span></div>
+          </article>
+          <p class="explanation" id="eExplain"></p>
+        </div>
+      </div>
+    </section>
+
     <section class="assumptions">
       <h2>モデルの前提</h2>
-      <p>受動・線形・集中定数モデルです。ピックアップは R–L と自己容量・損失抵抗、Volumeは10%オーディオテーパー相当の3端子ポット、Toneも同じテーパーの可変抵抗として近似します。アンプ入力容量はMiller効果を含む実効値です。弦・ボディ・ピッキング位置・真空管の非線形・スピーカーは含まないため、絶対的な「音色」ではなく電気負荷による変化の比較に向きます。</p>
+      <p>受動・線形・集中定数モデルです。ピックアップは R–L と自己容量・損失抵抗、Volumeは10%オーディオテーパー相当の3端子ポット、Toneも同じテーパーの可変抵抗として近似します。アンプ入力容量はMiller効果を含む実効値です。エフェクター出力は理想信号源にRout、Cout、出力対地抵抗を加えた小信号モデルで、能動回路の歪みや電源依存性は含みません。絶対的な「音色」ではなく電気負荷による変化の比較に向きます。</p>
     </section>
   </main>
 

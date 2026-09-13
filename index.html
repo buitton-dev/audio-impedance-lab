@@ -29,10 +29,12 @@
           <div class="control-heading">
             <h2>ギター回路</h2>
             <select id="gPreset" aria-label="ギタープリセット">
-              <option value="strat">Stratocaster例</option>
-              <option value="paf">PAF例</option>
+              <option value="strat-general">Stratタイプ（例示）</option>
+              <option value="fender-57-62">Fender ’57/’62（R/L公称値）</option>
+              <option value="paf-general">PAFタイプ（例示）</option>
             </select>
           </div>
+          <p id="gPresetNote" class="preset-note"></p>
           <div id="gControls"></div>
           <button id="gReset" class="quiet-button full" type="button">初期値に戻す</button>
         </aside>
@@ -60,14 +62,14 @@
           </ol>
           <article class="panel">
             <div class="panel-title"><h2>上の機材を電気回路に置き換えると</h2><span>同じ色が対応する領域です</span></div>
-            <svg id="gCircuit" class="circuit" viewBox="0 0 980 310" role="img" aria-labelledby="gCircuitTitle gCircuitDesc">
+            <svg id="gCircuit" class="circuit" viewBox="0 0 1180 360" role="img" aria-labelledby="gCircuitTitle gCircuitDesc">
               <title id="gCircuitTitle">エレキギターとアンプ入力の等価回路</title>
-              <desc id="gCircuitDesc">ピックアップの電圧源、直列抵抗とインダクタンス、トーン回路、ボリューム、ケーブル容量、アンプ入力を示す。</desc>
+              <desc id="gCircuitDesc">ピックアップの内部起電力、直列抵抗とインダクタンス、自己容量と損失抵抗、トーン回路、3端子ボリューム、ケーブル容量、アンプ入力抵抗、グリッドストッパー、実効入力容量を示す。</desc>
             </svg>
           </article>
           <article class="panel plot-panel">
-            <div class="panel-title"><h2>出力電圧の周波数特性</h2><span id="gSummary" aria-live="polite"></span></div>
-            <canvas id="gPlot" role="img" aria-label="ギター回路の周波数特性グラフ"></canvas>
+            <div class="panel-title"><h2>電気的伝達特性（Vgrid / 内部EMF）</h2><span id="gSummary" aria-live="polite"></span></div>
+            <canvas id="gPlot" role="img" aria-label="ギター等価回路の電気的伝達特性グラフ"></canvas>
             <div class="legend"><span class="legend-live">現在値</span><span class="legend-base">初期値</span></div>
           </article>
           <p class="explanation" id="gExplain"></p>
@@ -125,7 +127,7 @@
 
     <section class="assumptions">
       <h2>モデルの前提</h2>
-      <p>受動・線形・集中定数モデルです。ピックアップの磁気損失、ポットのワイパー位置、真空管の非線形性、長い伝送線路の分布定数は含めていません。したがって絶対的な音色の再現ではなく、定数変更による傾向の比較に向きます。</p>
+      <p>受動・線形・集中定数モデルです。ピックアップは R–L と自己容量・損失抵抗、Volumeは10%オーディオテーパー相当の3端子ポット、Toneも同じテーパーの可変抵抗として近似します。アンプ入力容量はMiller効果を含む実効値です。弦・ボディ・ピッキング位置・真空管の非線形・スピーカーは含まないため、絶対的な「音色」ではなく電気負荷による変化の比較に向きます。</p>
     </section>
   </main>
 

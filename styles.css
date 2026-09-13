@@ -76,6 +76,7 @@ h2 { margin-bottom: 0; font-size: 1rem; }
 }
 .controls { padding: 18px; position: sticky; top: 12px; }
 .control-heading { display: grid; gap: 10px; margin-bottom: 16px; }
+.preset-note { margin: -7px 0 15px; color: var(--muted); font-size: .78rem; line-height: 1.45; }
 select { width: 100%; min-height: 42px; padding: 7px 10px; }
 .control-row { display: block; margin: 0 0 15px; }
 .control-row > span { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 5px; font-size: .88rem; }

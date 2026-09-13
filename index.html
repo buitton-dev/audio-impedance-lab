@@ -45,10 +45,17 @@
               <option value="custom">カスタム</option>
             </select>
           </div>
-          <div id="gControls"></div>
+          <details class="advanced-controls">
+            <summary>詳細設定</summary>
+            <div id="gControls"></div>
+          </details>
           <button id="gReset" class="quiet-button full" type="button">初期値に戻す</button>
         </aside>
         <div class="visuals">
+          <section class="try-guide" id="gGuide" aria-labelledby="gGuideTitle">
+            <div><span class="try-label">まず試す</span><b id="gGuideTitle">Cable lengthを3 mから10 mへ</b><small id="gGuideStatus" aria-live="polite">共振ピークが低周波側へ動くことを確認します。</small></div>
+            <button id="gGuideButton" class="quiet-button" type="button">場所を示す</button>
+          </section>
           <aside class="model-note">
             <b>Stratタイプとは？</b>
             Fender Stratocaster系でよく使われるシングルコイルPickupと250 kΩのVolume/Toneを想定した呼び方です。この画面は、通常3個あるPickupのうち<b>1個だけを選択した状態</b>を表します。
@@ -111,10 +118,17 @@
               <option value="custom">カスタム</option>
             </select>
           </div>
-          <div id="lControls"></div>
+          <details class="advanced-controls">
+            <summary>詳細設定</summary>
+            <div id="lControls"></div>
+          </details>
           <button id="lReset" class="quiet-button full" type="button">初期値に戻す</button>
         </aside>
         <div class="visuals">
+          <section class="try-guide" id="lGuide" aria-labelledby="lGuideTitle">
+            <div><span class="try-label">まず試す</span><b id="lGuideTitle">Routを100 Ωから100 kΩへ</b><small id="lGuideStatus" aria-live="polite">Rinを固定して、抵抗分圧と高域側の変化を確認します。</small></div>
+            <button id="lGuideButton" class="quiet-button" type="button">場所を示す</button>
+          </section>
           <ol class="signal-story line-story" aria-label="機器間接続の信号の流れ">
             <li class="story-item pickup-stage">
               <svg class="story-icon" viewBox="0 0 64 64" aria-hidden="true"><rect x="9" y="13" width="46" height="38" rx="5"/><path d="M17 23h18M17 31h30M17 39h22"/><circle cx="47" cy="22" r="3"/></svg>
@@ -169,10 +183,17 @@
               <option value="custom">カスタム</option>
             </select>
           </div>
-          <div id="eControls"></div>
+          <details class="advanced-controls">
+            <summary>詳細設定</summary>
+            <div id="eControls"></div>
+          </details>
           <button id="eReset" class="quiet-button full" type="button">初期値に戻す</button>
         </aside>
         <div class="visuals">
+          <section class="try-guide" id="eGuide" aria-labelledby="eGuideTitle">
+            <div><span class="try-label">まず試す</span><b id="eGuideTitle">Coutを1 µFから100 nFへ</b><small id="eGuideStatus" aria-live="polite">低域遮断周波数が上がることを確認します。</small></div>
+            <button id="eGuideButton" class="quiet-button" type="button">場所を示す</button>
+          </section>
           <aside class="model-note">
             <b>対地抵抗を入れる理由：</b>
             R<sub>pull-down</sub>は出力端子のDC電位を安定させ、接続時のポップノイズを抑えるための抵抗です。C<sub>out</sub>と組み合わせると低域のハイパス特性にも関与します。ここではR<sub>out</sub>とは別の部品として扱います。
@@ -225,6 +246,15 @@
     <span>Audio Impedance Lab</span>
     <a href="https://www.arenaphysica.com/publications/smith-charts">Inspired by Arena Physica</a>
   </footer>
+  <dialog id="valueDialog" class="value-dialog" aria-labelledby="valueDialogTitle">
+    <form id="valueForm" method="dialog">
+      <h2 id="valueDialogTitle">部品値を入力</h2>
+      <label for="valueInput">値</label>
+      <div class="value-input-row"><input id="valueInput" type="number" inputmode="decimal" required><span id="valueUnit"></span></div>
+      <p id="valueRange" class="preset-note"></p>
+      <div class="dialog-actions"><button class="quiet-button" value="cancel" type="button" id="valueCancel">キャンセル</button><button class="quiet-button primary-button" value="default" type="submit">適用</button></div>
+    </form>
+  </dialog>
   <script src="app.js"></script>
 </body>
 </html>

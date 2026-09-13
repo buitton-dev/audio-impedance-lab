@@ -235,6 +235,10 @@ function horizontalInductorPath(x1, x2, y, turns) {
   return path;
 }
 
+function interactiveValue(model, key, text, x, y, label) {
+  return `<text class="value interactive-value" x="${x}" y="${y}" data-model="${model}" data-key="${key}" role="button" tabindex="0" aria-label="${label} ${text}。上下ドラッグまたは矢印キーで変更。クリックで数値入力">${text} ↕</text>`;
+}
+
 function guitarCircuitSvg() {
   const v = (key, unit) => formatValue(guitar[key], unit);
   const cableC = guitar.cableLength * guitar.cableCapPerM;
@@ -248,7 +252,7 @@ function guitarCircuitSvg() {
   <g class="wire"><line x1="665" y1="210" x2="665" y2="300"/><line x1="790" y1="180" x2="790" y2="220"/><line x1="790" y1="235" x2="790" y2="300"/><line x1="885" y1="180" x2="885" y2="205"/><line x1="885" y1="280" x2="885" y2="300"/><line x1="1030" y1="180" x2="1065" y2="180"/><line x1="1065" y1="180" x2="1065" y2="220"/><line x1="1065" y1="235" x2="1065" y2="300"/></g>
   <g class="component control-component"><path d="M665 180 l-12 10 24 10 -12 10"/></g><g class="component cable-component"><path d="M773 220 h34 m-34 15 h34"/></g><g class="component amp-component"><path d="M885 205 l-12 10 24 13 -24 13 24 13 -12 16"/><path d="M930 180 l10 -14 13 28 13 -28 13 28 13 -28 38 14"/><path d="M1048 220 h34 m-34 15 h34"/></g>
   <g class="node"><circle cx="300" cy="105" r="5"/><circle cx="690" cy="180" r="5"/><circle cx="885" cy="180" r="5"/><circle cx="1065" cy="180" r="5"/></g>
-  <g><text x="52" y="335">internal EMF</text><text x="115" y="66">L<tspan font-size="11" dy="3">p</tspan></text><text class="value" x="105" y="90">${v("pickupL", "H")}</text><text x="230" y="66">DCR</text><text class="value" x="220" y="89">${v("pickupR", "Ω")}</text><text x="315" y="202">C<tspan font-size="11" dy="3">p</tspan> ${v("pickupC", "F")}</text><text x="382" y="235">R<tspan font-size="11" dy="3">damp(eq)</tspan></text><text class="value" x="392" y="261">${v("pickupLossR", "Ω")}</text><text x="480" y="218">Tone ${v("toneR", "Ω")}</text><text class="value" x="477" y="272">${v("tonePosition", "knob")} / ${v("toneC", "F")}</text><text x="595" y="225">Volume ${v("volumeR", "Ω")}</text><text class="value" x="602" y="248">${v("volumePosition", "knob")}</text><text x="735" y="212">Cable C</text><text class="value" x="730" y="260">${formatValue(cableC, "F")}</text><text x="845" y="238">R<tspan font-size="11" dy="3">in</tspan></text><text class="value" x="838" y="264">${v("ampInputR", "Ω")}</text><text x="944" y="143">Grid stopper</text><text class="value" x="945" y="166">${v("ampSeriesR", "Ω")}</text><text x="1085" y="224">C<tspan font-size="11" dy="3">in</tspan></text><text class="value" x="1085" y="250">${v("ampInputC", "F")}</text><text x="1080" y="166">V<tspan font-size="11" dy="3">grid</tspan></text></g>`;
+  <g><text x="52" y="335">internal EMF</text><text x="115" y="66">L<tspan font-size="11" dy="3">p</tspan></text>${interactiveValue("guitar", "pickupL", v("pickupL", "H"), 105, 90, "Pickup inductance")}<text x="230" y="66">DCR</text>${interactiveValue("guitar", "pickupR", v("pickupR", "Ω"), 220, 89, "Pickup DCR")}<text x="315" y="202">C<tspan font-size="11" dy="3">p</tspan></text>${interactiveValue("guitar", "pickupC", v("pickupC", "F"), 315, 226, "Pickup self capacitance")}<text x="382" y="235">R<tspan font-size="11" dy="3">damp(eq)</tspan></text>${interactiveValue("guitar", "pickupLossR", v("pickupLossR", "Ω"), 392, 261, "Resonance damping resistance")}<text x="477" y="218">Tone pot</text>${interactiveValue("guitar", "toneR", v("toneR", "Ω"), 477, 240, "Tone pot value")}${interactiveValue("guitar", "tonePosition", v("tonePosition", "knob"), 477, 263, "Tone knob")}${interactiveValue("guitar", "toneC", v("toneC", "F"), 557, 286, "Tone capacitor")}<text x="595" y="225">Volume pot</text>${interactiveValue("guitar", "volumeR", v("volumeR", "Ω"), 602, 248, "Volume pot value")}${interactiveValue("guitar", "volumePosition", v("volumePosition", "knob"), 602, 272, "Volume knob")}<text x="730" y="212">Cable</text>${interactiveValue("guitar", "cableLength", v("cableLength", "m"), 730, 238, "Cable length")}<text class="derived-value" x="730" y="264">Total C ${formatValue(cableC, "F")}</text><text x="845" y="238">R<tspan font-size="11" dy="3">in</tspan></text>${interactiveValue("guitar", "ampInputR", v("ampInputR", "Ω"), 838, 264, "Amplifier input resistance")}<text x="944" y="143">Grid stopper</text>${interactiveValue("guitar", "ampSeriesR", v("ampSeriesR", "Ω"), 945, 166, "Grid stopper resistance")}<text x="1085" y="224">C<tspan font-size="11" dy="3">in</tspan></text>${interactiveValue("guitar", "ampInputC", v("ampInputC", "F"), 1085, 250, "Effective input capacitance")}<text x="1080" y="166">V<tspan font-size="11" dy="3">grid</tspan></text></g>`;
 }
 
 function lineCircuitSvg() {
@@ -264,7 +268,7 @@ function lineCircuitSvg() {
   <g class="wire"><line x1="100" y1="120" x2="100" y2="149"/><line x1="100" y1="193" x2="100" y2="222"/></g>
   <g class="component cable-component"><path d="M280 120 l11 -15 13 30 13 -30 13 30 13 -30 27 15"/><path d="${coilPath}"/><path d="M650 120 v35 m-17 0 h34 m-34 13 h34 m-17 0 v54"/></g><g class="component amp-component"><path d="M850 120 v24 l-13 9 26 13 -26 13 26 13 -13 9 v21"/></g>
   <g class="node"><circle cx="650" cy="120" r="5"/><circle cx="850" cy="120" r="5"/></g>
-  <g><text x="65" y="260">V<tspan font-size="11" dy="3">source</tspan></text><text x="156" y="78">R<tspan font-size="11" dy="3">out</tspan></text><text class="value" x="150" y="103">${v("sourceR", "Ω")}</text><text x="300" y="78">R<tspan font-size="11" dy="3">cable</tspan></text><text class="value" x="298" y="103">${formatValue(totals.cableR, "Ω")}</text><text x="448" y="71">L<tspan font-size="11" dy="3">cable</tspan></text><text class="value" x="438" y="96">${formatValue(totals.cableL, "H")}</text><text class="value" x="438" y="160">表示 ${coilTurns} loops</text><text x="675" y="157">C<tspan font-size="11" dy="3">cable</tspan></text><text class="value" x="675" y="183">${formatValue(totals.cableC, "F")}</text><text x="870" y="154">R<tspan font-size="11" dy="3">in</tspan></text><text class="value" x="870" y="180">${v("loadR", "Ω")}</text><text x="875" y="104">V<tspan font-size="11" dy="3">out</tspan></text><text x="330" y="260">長さ ${v("cableLength", "m")} × 単位長定数</text></g>`;
+  <g><text x="65" y="260">V<tspan font-size="11" dy="3">source</tspan></text><text x="156" y="78">R<tspan font-size="11" dy="3">out</tspan></text>${interactiveValue("line", "sourceR", v("sourceR", "Ω"), 150, 103, "Source output resistance")}<text x="300" y="78">R<tspan font-size="11" dy="3">cable</tspan></text><text class="derived-value" x="298" y="103">${formatValue(totals.cableR, "Ω")}</text><text x="448" y="71">L<tspan font-size="11" dy="3">cable</tspan></text><text class="derived-value" x="438" y="96">${formatValue(totals.cableL, "H")}</text><text class="derived-value" x="438" y="160">表示 ${coilTurns} loops</text><text x="675" y="157">C<tspan font-size="11" dy="3">cable</tspan></text><text class="derived-value" x="675" y="183">${formatValue(totals.cableC, "F")}</text><text x="870" y="154">R<tspan font-size="11" dy="3">in</tspan></text>${interactiveValue("line", "loadR", v("loadR", "Ω"), 870, 180, "Load input resistance")}<text x="875" y="104">V<tspan font-size="11" dy="3">out</tspan></text><text x="330" y="245">Cable length</text>${interactiveValue("line", "cableLength", v("cableLength", "m"), 435, 245, "Cable length")}<text class="derived-value" x="330" y="270">合計値は長さ × 単位長定数</text></g>`;
 }
 
 function effectorCircuitSvg() {
@@ -282,7 +286,7 @@ function effectorCircuitSvg() {
   <g class="component cable-component"><path d="M510 105 h35 l11 -15 13 30 13 -30 13 30 13 -30 25 15 h17"/><path d="${coilPath}"/><path d="M855 105 v42 m-17 0 h34 m-34 14 h34 m-17 0 v99"/></g>
   <g class="component amp-component"><path d="M1020 105 v30 l-13 10 26 14 -26 14 26 14 -13 10 v63"/></g>
   <g class="node"><circle cx="510" cy="105" r="5"/><circle cx="855" cy="105" r="5"/><circle cx="1020" cy="105" r="5"/></g>
-  <g><text x="50" y="292">internal signal</text><text x="155" y="63">R<tspan font-size="11" dy="3">out</tspan></text><text class="value" x="150" y="87">${v("sourceR", "Ω")}</text><text x="270" y="51">C<tspan font-size="11" dy="3">out</tspan></text><text class="value" x="342" y="87">${v("outputC", "F")}</text><text x="445" y="163">R<tspan font-size="11" dy="3">pull-down</tspan></text><text class="value" x="437" y="196">${v("pullDownR", "Ω")}</text><text x="548" y="62">R<tspan font-size="11" dy="3">cable</tspan></text><text class="value" x="542" y="143">${formatValue(totals.cableR, "Ω")}</text><text x="684" y="56">L<tspan font-size="11" dy="3">cable</tspan></text><text class="value" x="675" y="82">${formatValue(totals.cableL, "H")} / ${coilTurns} loops</text><text x="878" y="146">C<tspan font-size="11" dy="3">cable</tspan></text><text class="value" x="878" y="180">${formatValue(totals.cableC, "F")}</text><text x="1040" y="146">R<tspan font-size="11" dy="3">in</tspan></text><text class="value" x="1040" y="180">${v("loadR", "Ω")}</text><text x="1040" y="89">V<tspan font-size="11" dy="3">out</tspan></text><text x="650" y="292">長さ ${v("cableLength", "m")} × 単位長定数</text></g>`;
+  <g><text x="50" y="292">internal signal</text><text x="155" y="63">R<tspan font-size="11" dy="3">out</tspan></text>${interactiveValue("effector", "sourceR", v("sourceR", "Ω"), 150, 87, "Effector output resistance")}<text x="270" y="51">C<tspan font-size="11" dy="3">out</tspan></text>${interactiveValue("effector", "outputC", v("outputC", "F"), 270, 87, "Output coupling capacitance")}<text x="445" y="163">R<tspan font-size="11" dy="3">pull-down</tspan></text>${interactiveValue("effector", "pullDownR", v("pullDownR", "Ω"), 437, 196, "Output pull-down resistance")}<text x="548" y="62">R<tspan font-size="11" dy="3">cable</tspan></text><text class="derived-value" x="542" y="143">${formatValue(totals.cableR, "Ω")}</text><text x="684" y="56">L<tspan font-size="11" dy="3">cable</tspan></text><text class="derived-value" x="675" y="82">${formatValue(totals.cableL, "H")} / ${coilTurns} loops</text><text x="878" y="146">C<tspan font-size="11" dy="3">cable</tspan></text><text class="derived-value" x="878" y="180">${formatValue(totals.cableC, "F")}</text><text x="1040" y="146">R<tspan font-size="11" dy="3">in</tspan></text>${interactiveValue("effector", "loadR", v("loadR", "Ω"), 1040, 180, "Next input resistance")}<text x="1040" y="89">V<tspan font-size="11" dy="3">out</tspan></text><text x="650" y="292">Cable length</text>${interactiveValue("effector", "cableLength", v("cableLength", "m"), 755, 292, "Cable length")}</g>`;
 }
 
 function canvasSetup(canvas) {
@@ -353,6 +357,7 @@ function updateGuitar() {
   const totalCap = guitar.pickupC + guitar.cableLength * guitar.cableCapPerM + guitar.ampInputC;
   const ideal = 1 / (2 * Math.PI * Math.sqrt(guitar.pickupL * totalCap));
   $("gExplain").textContent = `これは弦・ボディ・スピーカーを含まない電気的伝達特性 Vgrid / 内部EMF です。Lと対地容量から見積もる無損失共振は約${Math.round(ideal).toLocaleString()} Hz。DCR・損失抵抗・ポット位置・アンプ入力が実際のピークを変えます。`;
+  updateGuide("guitar");
 }
 
 function updateLine() {
@@ -366,6 +371,7 @@ function updateLine() {
   const divisionDb = dB(dcGain);
   $("lSummary").textContent = info.cutoff ? `−3 dB帯域 ≈ ${Math.round(info.cutoff).toLocaleString()} Hz` : "20 kHz内に追加の−3 dB点なし";
   $("lExplain").textContent = `${formatValue(line.cableLength, "m")}の合計は R ${formatValue(totals.cableR, "Ω")} / L ${formatValue(totals.cableL, "H")} / C ${formatValue(totals.cableC, "F")}。低周波の抵抗分圧は ${divisionDb.toFixed(2)} dBです。`;
+  updateGuide("line");
 }
 
 function updateEffector() {
@@ -379,11 +385,56 @@ function updateEffector() {
   const midband = dB(magnitude(effectorTransfer(effector, 1000)));
   $("eSummary").textContent = `Cout低域fc概算 ${formatFrequency(estimatedFc)} / 1 kHz ${midband.toFixed(2)} dB`;
   $("eExplain").textContent = `CoutはDCを遮断し、Rout＋（Rpull-down ∥ 次段Rin）との組み合わせで低域を減衰させます。概算fcは${formatFrequency(estimatedFc)}です。高域側は主にRoutとケーブル合計C ${formatValue(totals.cableC, "F")}の組み合わせで変化します。`;
+  updateGuide("effector");
 }
 
 function formatFrequency(value) {
   if (value >= 1000) return `${trim(value / 1000)} kHz`;
   return `${trim(value)} Hz`;
+}
+
+const guideTargets = {
+  guitar: { key: "cableLength", target: 10, tolerance: 0.5 },
+  line: { key: "sourceR", target: 100000, tolerance: 5000 },
+  effector: { key: "outputC", target: 100e-9, tolerance: 10e-9 }
+};
+const activeGuides = new Set();
+
+function guideIsComplete(model) {
+  const guide = guideTargets[model];
+  if (guide.control) return $(guide.control).value === guide.target;
+  const state = modelConfigs[model].state;
+  return Math.abs(state[guide.key] - guide.target) <= guide.tolerance;
+}
+
+function updateGuide(model) {
+  if (!activeGuides.has(model)) return;
+  const guide = guideTargets[model];
+  const prefix = model === "guitar" ? "g" : model === "line" ? "l" : "e";
+  const complete = guideIsComplete(model);
+  const status = $(`${prefix}GuideStatus`);
+  if (complete) {
+    status.textContent = model === "guitar" ? "完了：共振ピークが低周波側へ移動しました。" : model === "line" ? "完了：レベル低下と高域側の変化を初期値の破線と比較してください。" : "完了：低域遮断周波数が約17 Hzまで上がりました。";
+  } else {
+    status.textContent = model === "guitar" ? "強調されたCable lengthを上へドラッグしてください。" : model === "line" ? "強調されたRoutを上へドラッグしてください。" : "強調されたCoutを下へドラッグしてください。";
+  }
+  if (guide.control) {
+    $(guide.control).classList.toggle("guide-focus-control", !complete);
+    return;
+  }
+  const target = document.querySelector(`.interactive-value[data-model="${model}"][data-key="${guide.key}"]`);
+  if (target) target.classList.add(complete ? "guide-complete" : "guide-focus");
+}
+
+function showGuide(model) {
+  activeGuides.add(model);
+  updateGuide(model);
+  const guide = guideTargets[model];
+  const target = guide.control ? $(guide.control) : document.querySelector(`.interactive-value[data-model="${model}"][data-key="${guide.key}"]`);
+  if (target) {
+    target.focus({ preventScroll: true });
+    target.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+  }
 }
 
 function applyGuitarPreset(name) {
@@ -433,6 +484,145 @@ function applyEffectorCablePreset(name) {
   updateEffector();
 }
 
+const modelConfigs = {
+  guitar: { state: guitar, defs: guitarDefs, controls: "gControls", circuit: "gCircuit", update: updateGuitar },
+  line: { state: line, defs: lineDefs, controls: "lControls", circuit: "lCircuit", update: updateLine },
+  effector: { state: effector, defs: effectorDefs, controls: "eControls", circuit: "eCircuit", update: updateEffector }
+};
+
+function defFor(model, key) {
+  return modelConfigs[model].defs.find((def) => def.key === key);
+}
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function roundedToStep(value, def) {
+  if (!def.step) return clamp(value, def.min, def.max);
+  const steps = Math.round((value - def.min) / def.step);
+  const rounded = def.min + steps * def.step;
+  return clamp(Number(rounded.toPrecision(12)), def.min, def.max);
+}
+
+function setModelValue(model, key, value, round = true) {
+  const config = modelConfigs[model];
+  const def = defFor(model, key);
+  if (!config || !def || !Number.isFinite(value)) return;
+  config.state[key] = round ? roundedToStep(value, def) : clamp(value, def.min, def.max);
+  refreshControls($(config.controls), config.defs, config.state);
+  config.update();
+}
+
+function usesLogDrag(def) {
+  return ["Ω", "F", "H"].includes(def.unit);
+}
+
+function draggedValue(def, startValue, deltaY, fine) {
+  const sensitivity = fine ? 5 : 1;
+  if (usesLogDrag(def)) return startValue * Math.pow(10, -deltaY / (120 * sensitivity));
+  return startValue - deltaY * (def.max - def.min) / (240 * sensitivity);
+}
+
+let dragSession = null;
+let dialogTarget = null;
+
+function attachCircuitInteraction(model) {
+  const svg = $(modelConfigs[model].circuit);
+  svg.addEventListener("pointerdown", (event) => {
+    const target = event.target.closest?.(".interactive-value");
+    if (!target || target.dataset.model !== model) return;
+    event.preventDefault();
+    const key = target.dataset.key;
+    dragSession = { model, key, pointerId: event.pointerId, startY: event.clientY, startValue: modelConfigs[model].state[key], moved: false };
+    svg.setPointerCapture(event.pointerId);
+  });
+  svg.addEventListener("pointermove", (event) => {
+    if (!dragSession || dragSession.pointerId !== event.pointerId || dragSession.model !== model) return;
+    const deltaY = event.clientY - dragSession.startY;
+    if (Math.abs(deltaY) >= 4) dragSession.moved = true;
+    if (!dragSession.moved) return;
+    event.preventDefault();
+    const def = defFor(model, dragSession.key);
+    setModelValue(model, dragSession.key, draggedValue(def, dragSession.startValue, deltaY, event.shiftKey));
+  });
+  const finishPointer = (event) => {
+    if (!dragSession || dragSession.pointerId !== event.pointerId || dragSession.model !== model) return;
+    const session = dragSession;
+    dragSession = null;
+    if (svg.hasPointerCapture(event.pointerId)) svg.releasePointerCapture(event.pointerId);
+    if (!session.moved && event.type === "pointerup") openValueDialog(session.model, session.key);
+  };
+  svg.addEventListener("pointerup", finishPointer);
+  svg.addEventListener("pointercancel", finishPointer);
+  svg.addEventListener("keydown", (event) => {
+    const target = event.target.closest?.(".interactive-value");
+    if (!target || target.dataset.model !== model) return;
+    const key = target.dataset.key;
+    const def = defFor(model, key);
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      openValueDialog(model, key);
+      return;
+    }
+    if (!["ArrowUp", "ArrowDown"].includes(event.key)) return;
+    event.preventDefault();
+    const direction = event.key === "ArrowUp" ? 1 : -1;
+    const current = modelConfigs[model].state[key];
+    const value = usesLogDrag(def) ? current * Math.pow(10, direction / (event.shiftKey ? 60 : 12)) : current + direction * def.step * (event.shiftKey ? 0.2 : 1);
+    setModelValue(model, key, value, !event.shiftKey);
+    requestAnimationFrame(() => document.querySelector(`.interactive-value[data-model="${model}"][data-key="${key}"]`)?.focus());
+  });
+}
+
+function engineeringInput(value, unit) {
+  if (unit === "F") {
+    if (value >= 1e-6) return { value: value * 1e6, unit: "µF", multiplier: 1e-6 };
+    if (value >= 1e-9) return { value: value * 1e9, unit: "nF", multiplier: 1e-9 };
+    return { value: value * 1e12, unit: "pF", multiplier: 1e-12 };
+  }
+  if (unit === "H") {
+    if (value < 1e-3) return { value: value * 1e6, unit: "µH", multiplier: 1e-6 };
+    if (value < 1) return { value: value * 1e3, unit: "mH", multiplier: 1e-3 };
+    return { value, unit: "H", multiplier: 1 };
+  }
+  if (unit === "Ω") {
+    if (value >= 1e6) return { value: value / 1e6, unit: "MΩ", multiplier: 1e6 };
+    if (value >= 1e3) return { value: value / 1e3, unit: "kΩ", multiplier: 1e3 };
+    return { value, unit: "Ω", multiplier: 1 };
+  }
+  if (unit === "m") return { value, unit: "m", multiplier: 1 };
+  if (unit === "knob") return { value, unit: "/ 10", multiplier: 1 };
+  return { value, unit, multiplier: 1 };
+}
+
+function openValueDialog(model, key) {
+  const def = defFor(model, key);
+  const converted = engineeringInput(modelConfigs[model].state[key], def.unit);
+  dialogTarget = { model, key, multiplier: converted.multiplier };
+  $("valueDialogTitle").textContent = def.label;
+  $("valueInput").value = Number(converted.value.toPrecision(8));
+  $("valueInput").step = "any";
+  $("valueUnit").textContent = converted.unit;
+  const min = engineeringInput(def.min, def.unit);
+  const max = engineeringInput(def.max, def.unit);
+  $("valueRange").textContent = `設定範囲：${formatValue(def.min, def.unit)} ～ ${formatValue(def.max, def.unit)}`;
+  $("valueInput").min = min.multiplier === converted.multiplier ? min.value : def.min / converted.multiplier;
+  $("valueInput").max = max.multiplier === converted.multiplier ? max.value : def.max / converted.multiplier;
+  $("valueDialog").showModal();
+  $("valueInput").focus();
+  $("valueInput").select();
+}
+
+$("valueForm").addEventListener("submit", (event) => {
+  event.preventDefault();
+  if (!dialogTarget || !$("valueInput").reportValidity()) return;
+  setModelValue(dialogTarget.model, dialogTarget.key, Number($("valueInput").value) * dialogTarget.multiplier, false);
+  $("valueDialog").close();
+  dialogTarget = null;
+});
+$("valueCancel").addEventListener("click", () => { $("valueDialog").close(); dialogTarget = null; });
+
 function switchTab(tab) {
   ["guitar", "line", "effector"].forEach((name) => {
     const active = name === tab;
@@ -455,6 +645,10 @@ createControls($("eControls"), effectorDefs, effector, (key) => {
   if (["cableResPerM", "cableIndPerM", "cableCapPerM"].includes(key)) $("eCablePreset").value = "custom";
   updateEffector();
 });
+["guitar", "line", "effector"].forEach(attachCircuitInteraction);
+$("gGuideButton").addEventListener("click", () => showGuide("guitar"));
+$("lGuideButton").addEventListener("click", () => showGuide("line"));
+$("eGuideButton").addEventListener("click", () => showGuide("effector"));
 $("gPreset").addEventListener("change", (e) => applyGuitarPreset(e.target.value));
 $("lPreset").addEventListener("change", (e) => applyLinePreset(e.target.value));
 $("ePreset").addEventListener("change", (e) => applyEffectorPreset(e.target.value));

@@ -21,7 +21,6 @@
     <nav class="tabs" aria-label="表示モード" role="tablist">
       <button class="tab is-active" id="tab-guitar" type="button" role="tab" aria-selected="true" aria-controls="panel-guitar">ギター等価回路</button>
       <button class="tab" id="tab-line" type="button" role="tab" aria-selected="false" aria-controls="panel-line">接続とケーブル</button>
-      <button class="tab" id="tab-smith" type="button" role="tab" aria-selected="false" aria-controls="panel-smith">Smith chart</button>
     </nav>
 
     <section id="panel-guitar" class="mode-panel" role="tabpanel" aria-labelledby="tab-guitar">
@@ -38,8 +37,29 @@
           <button id="gReset" class="quiet-button full" type="button">初期値に戻す</button>
         </aside>
         <div class="visuals">
+          <ol class="signal-story" aria-label="ギターからアンプまでの信号の流れ">
+            <li class="story-item pickup-stage">
+              <svg class="story-icon" viewBox="0 0 64 64" aria-hidden="true"><path d="M10 16h44M10 24h44M10 32h44M10 40h44M10 48h44"/><rect x="22" y="12" width="20" height="40" rx="5"/><circle cx="27" cy="20" r="1.8"/><circle cx="37" cy="20" r="1.8"/><circle cx="27" cy="44" r="1.8"/><circle cx="37" cy="44" r="1.8"/></svg>
+              <span><b>ピックアップ</b><small>弦の振動を電気信号へ</small></span>
+            </li>
+            <li class="story-arrow" aria-hidden="true">→</li>
+            <li class="story-item control-stage">
+              <svg class="story-icon" viewBox="0 0 64 64" aria-hidden="true"><circle cx="21" cy="33" r="13"/><circle cx="45" cy="33" r="13"/><path d="M21 33l5-8M45 33l-5-8"/></svg>
+              <span><b>Volume / Tone</b><small>音量と高域の落ち方を調整</small></span>
+            </li>
+            <li class="story-arrow" aria-hidden="true">→</li>
+            <li class="story-item cable-stage">
+              <svg class="story-icon" viewBox="0 0 64 64" aria-hidden="true"><path d="M12 16v14c0 16 13 22 25 16s16-19 7-27"/><path d="M39 13l8 8M42 10l12 12"/><path d="M7 12h10v8H7z"/></svg>
+              <span><b>シールドケーブル</b><small>容量がピックアップの負荷になる</small></span>
+            </li>
+            <li class="story-arrow" aria-hidden="true">→</li>
+            <li class="story-item amp-stage">
+              <svg class="story-icon" viewBox="0 0 64 64" aria-hidden="true"><rect x="9" y="11" width="46" height="42" rx="4"/><circle cx="32" cy="35" r="12"/><circle cx="17" cy="19" r="2"/><circle cx="24" cy="19" r="2"/><path d="M24 35h16M32 27v16"/></svg>
+              <span><b>アンプ入力</b><small>入力抵抗・容量で信号を受ける</small></span>
+            </li>
+          </ol>
           <article class="panel">
-            <div class="panel-title"><h2>連動する等価回路</h2><span>Volume最大位置の集中定数モデル</span></div>
+            <div class="panel-title"><h2>上の機材を電気回路に置き換えると</h2><span>同じ色が対応する領域です</span></div>
             <svg id="gCircuit" class="circuit" viewBox="0 0 980 310" role="img" aria-labelledby="gCircuitTitle gCircuitDesc">
               <title id="gCircuitTitle">エレキギターとアンプ入力の等価回路</title>
               <desc id="gCircuitDesc">ピックアップの電圧源、直列抵抗とインダクタンス、トーン回路、ボリューム、ケーブル容量、アンプ入力を示す。</desc>
@@ -70,8 +90,24 @@
           <button id="lReset" class="quiet-button full" type="button">初期値に戻す</button>
         </aside>
         <div class="visuals">
+          <ol class="signal-story line-story" aria-label="機器間接続の信号の流れ">
+            <li class="story-item pickup-stage">
+              <svg class="story-icon" viewBox="0 0 64 64" aria-hidden="true"><rect x="9" y="13" width="46" height="38" rx="5"/><path d="M17 23h18M17 31h30M17 39h22"/><circle cx="47" cy="22" r="3"/></svg>
+              <span><b>送り出す機器</b><small>出力抵抗 R<sub>out</sub> を持つ</small></span>
+            </li>
+            <li class="story-arrow" aria-hidden="true">→</li>
+            <li class="story-item cable-stage">
+              <svg class="story-icon" viewBox="0 0 64 64" aria-hidden="true"><path d="M12 16v14c0 16 13 22 25 16s16-19 7-27"/><path d="M39 13l8 8M42 10l12 12"/><path d="M7 12h10v8H7z"/></svg>
+              <span><b>ケーブル</b><small>直列R・Lと対地Cを持つ</small></span>
+            </li>
+            <li class="story-arrow" aria-hidden="true">→</li>
+            <li class="story-item amp-stage">
+              <svg class="story-icon" viewBox="0 0 64 64" aria-hidden="true"><rect x="9" y="11" width="46" height="42" rx="4"/><circle cx="32" cy="35" r="12"/><circle cx="17" cy="19" r="2"/><circle cx="24" cy="19" r="2"/></svg>
+              <span><b>受ける機器</b><small>入力抵抗 R<sub>in</sub> で受ける</small></span>
+            </li>
+          </ol>
           <article class="panel">
-            <div class="panel-title"><h2>接続モデル</h2><span>線路は集中定数 R・L・C で近似</span></div>
+            <div class="panel-title"><h2>機器間接続を電気回路に置き換えると</h2><span>線路は集中定数 R・L・C で近似</span></div>
             <svg id="lCircuit" class="circuit" viewBox="0 0 980 290" role="img" aria-labelledby="lCircuitTitle lCircuitDesc">
               <title id="lCircuitTitle">信号源、ケーブル、負荷の等価回路</title>
               <desc id="lCircuitDesc">出力抵抗、ケーブルの直列抵抗とインダクタンス、対地容量、入力抵抗を示す。</desc>
@@ -85,29 +121,6 @@
           <p class="explanation" id="lExplain"></p>
         </div>
       </div>
-    </section>
-
-    <section id="panel-smith" class="mode-panel" role="tabpanel" aria-labelledby="tab-smith" hidden>
-      <div class="smith-layout">
-        <aside class="controls smith-controls" aria-label="Smith chartの設定">
-          <h2>基準インピーダンス</h2>
-          <label class="control-row">
-            <span><b>Z₀</b><output id="z0Out"></output></span>
-            <input id="z0" type="range" min="0" max="1" step="0.001" value="0.175">
-          </label>
-          <label class="control-row">
-            <span><b>観測周波数</b><output id="cursorOut"></output></span>
-            <input id="cursorFreq" type="range" min="0" max="400" step="1" value="226">
-          </label>
-          <div class="readout" id="smithReadout" aria-live="polite"></div>
-          <p class="note">「接続とケーブル」の現在値から、信号源側に見える入力インピーダンスを正規化して表示します。</p>
-        </aside>
-        <article class="panel smith-panel">
-          <div class="panel-title"><h2>正規化インピーダンス軌跡</h2><span>20 Hz → 20 kHz</span></div>
-          <canvas id="smithPlot" role="img" aria-label="入力インピーダンスのSmith chart"></canvas>
-        </article>
-      </div>
-      <p class="explanation smith-note">音声帯域の短いケーブルは通常、伝送線路ではなく集中定数として扱えます。ここでは同じ複素インピーダンスをRFで馴染みのある Γ 平面へ写し、見方の共通性を示しています。</p>
     </section>
 
     <section class="assumptions">

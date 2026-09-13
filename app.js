@@ -41,6 +41,17 @@ const lineDefs = [
   { key: "cableCapPerM", label: "Cable C / m", unit: "F/m", min: 50e-12, max: 200e-12, step: 5e-12 }
 ];
 
+const effectorDefs = [
+  { key: "sourceR", label: "Output Rout", unit: "Ω", min: 10, max: 100000, step: 10, scale: "log" },
+  { key: "outputC", label: "Output coupling Cout", unit: "F", min: 10e-9, max: 10e-6, step: 10e-9, scale: "log" },
+  { key: "pullDownR", label: "Output pull-down R", unit: "Ω", min: 10000, max: 2000000, step: 1000, scale: "log" },
+  { key: "loadR", label: "Next input Rin", unit: "Ω", min: 10000, max: 2000000, step: 1000, scale: "log" },
+  { key: "cableLength", label: "Cable length", unit: "m", min: 0.5, max: 20, step: 0.5 },
+  { key: "cableResPerM", label: "Cable R / m", unit: "Ω/m", min: 0, max: 1, step: 0.01 },
+  { key: "cableIndPerM", label: "Cable L / m", unit: "H/m", min: 0, max: 2e-6, step: 0.05e-6 },
+  { key: "cableCapPerM", label: "Cable C / m", unit: "F/m", min: 50e-12, max: 200e-12, step: 5e-12 }
+];
+
 const guitarPresets = {
   "strat-general": { pickupR: 6000, pickupL: 2.5, pickupC: 100e-12, pickupLossR: 1e6, volumeR: 250000, volumePosition: 10, toneR: 250000, tonePosition: 10, toneC: 47e-9, cableLength: 3, cableCapPerM: 100e-12, ampSeriesR: 34000, ampInputR: 1e6, ampInputC: 100e-12 },
   "fender-57-62": { pickupR: 5400, pickupL: 2.1, pickupC: 100e-12, pickupLossR: 1e6, volumeR: 250000, volumePosition: 10, toneR: 250000, tonePosition: 10, toneC: 47e-9, cableLength: 3, cableCapPerM: 100e-12, ampSeriesR: 34000, ampInputR: 1e6, ampInputC: 100e-12 },
@@ -71,10 +82,24 @@ const linePresets = {
   guitar: { sourceR: 10000, loadR: 1e6, cableLength: 3, cableResPerM: 0.1, cableIndPerM: 0.5e-6, cableCapPerM: 100e-12 }
 };
 
+const effectorPresets = {
+  buffered: { sourceR: 1000, outputC: 1e-6, pullDownR: 100000, loadR: 1e6, cableLength: 3, cableResPerM: 0.1, cableIndPerM: 0.5e-6, cableCapPerM: 100e-12 },
+  "small-cout": { sourceR: 1000, outputC: 100e-9, pullDownR: 100000, loadR: 1e6, cableLength: 3, cableResPerM: 0.1, cableIndPerM: 0.5e-6, cableCapPerM: 100e-12 },
+  "high-low": { sourceR: 10000, outputC: 100e-9, pullDownR: 100000, loadR: 10000, cableLength: 3, cableResPerM: 0.1, cableIndPerM: 0.5e-6, cableCapPerM: 100e-12 }
+};
+
+const effectorPresetNotes = {
+  buffered: "低いRout、1 µFのCout、100 kΩの出力対地抵抗から次段1 MΩを駆動する教材例です。",
+  "small-cout": "Coutを100 nFにして、対地抵抗・次段入力抵抗との低域ハイパスを見やすくした例です。",
+  "high-low": "高めのRoutと低いRinが同時に効く、負荷条件の厳しい比較例です。"
+};
+
 let guitar = { ...guitarPresets["strat-general"] };
 let line = { ...linePresets["low-high"] };
+let effector = { ...effectorPresets.buffered };
 let guitarBaseline = { ...guitar };
 let lineBaseline = { ...line };
+let effectorBaseline = { ...effector };
 
 function formatValue(value, unit) {
   if (unit === "F") {
@@ -189,6 +214,17 @@ function lineTransfer(params, f) {
   return div(load, add(series, load));
 }
 
+function effectorTransfer(params, f) {
+  const w = 2 * Math.PI * f;
+  const cable = lineTotals(params);
+  const load = parallel(complex(params.loadR, 0), complex(0, -1 / (w * cable.cableC)));
+  const cablePath = add(complex(cable.cableR, w * cable.cableL), load);
+  const outputNodeLoad = parallel(complex(params.pullDownR, 0), cablePath);
+  const sourcePath = add(complex(params.sourceR, 0), complex(0, -1 / (w * params.outputC)));
+  const outputNodeV = div(outputNodeLoad, add(sourcePath, outputNodeLoad));
+  return mul(outputNodeV, div(load, cablePath));
+}
+
 function horizontalInductorPath(x1, x2, y, turns) {
   if (turns < 1) return `M${x1} ${y}H${x2}`;
   const turnWidth = (x2 - x1) / turns;
@@ -229,6 +265,24 @@ function lineCircuitSvg() {
   <g class="component cable-component"><path d="M280 120 l11 -15 13 30 13 -30 13 30 13 -30 27 15"/><path d="${coilPath}"/><path d="M650 120 v35 m-17 0 h34 m-34 13 h34 m-17 0 v54"/></g><g class="component amp-component"><path d="M850 120 v24 l-13 9 26 13 -26 13 26 13 -13 9 v21"/></g>
   <g class="node"><circle cx="650" cy="120" r="5"/><circle cx="850" cy="120" r="5"/></g>
   <g><text x="65" y="260">V<tspan baseline-shift="sub">source</tspan></text><text x="156" y="82">R<tspan baseline-shift="sub">out</tspan></text><text class="value" x="150" y="102">${v("sourceR", "Ω")}</text><text x="300" y="82">R<tspan baseline-shift="sub">cable</tspan></text><text class="value" x="298" y="102">${formatValue(totals.cableR, "Ω")}</text><text x="448" y="75">L<tspan baseline-shift="sub">cable</tspan></text><text class="value" x="438" y="96">${formatValue(totals.cableL, "H")}</text><text class="value" x="438" y="160">表示 ${coilTurns} loops</text><text x="675" y="161">C<tspan baseline-shift="sub">cable</tspan></text><text class="value" x="675" y="185">${formatValue(totals.cableC, "F")}</text><text x="870" y="158">R<tspan baseline-shift="sub">in</tspan></text><text class="value" x="870" y="182">${v("loadR", "Ω")}</text><text x="875" y="104">V<tspan baseline-shift="sub">out</tspan></text><text x="330" y="260">長さ ${v("cableLength", "m")} × 単位長定数</text></g>`;
+}
+
+function effectorCircuitSvg() {
+  const v = (key, unit) => formatValue(effector[key], unit);
+  const totals = lineTotals(effector);
+  const maxCableL = 20 * 2e-6;
+  const coilTurns = totals.cableL <= 0 ? 0 : Math.round(3 + 6 * Math.log10(1 + totals.cableL / 0.5e-6) / Math.log10(1 + maxCableL / 0.5e-6));
+  const coilPath = horizontalInductorPath(650, 760, 105, coilTurns);
+  return `
+  <g class="group-label"><text x="45" y="28">EFFECTOR OUTPUT</text><text x="465" y="28">OUTPUT JACK</text><text x="620" y="28">CABLE</text><text x="970" y="28">NEXT INPUT</text></g>
+  <g class="wire"><line x1="45" y1="105" x2="92" y2="105"/><line x1="45" y1="105" x2="45" y2="260"/><line x1="45" y1="260" x2="1125" y2="260"/><line x1="92" y1="105" x2="135" y2="105"/><line x1="225" y1="105" x2="285" y2="105"/><line x1="300" y1="105" x2="510" y2="105"/><line x1="760" y1="105" x2="1070" y2="105"/></g>
+  <g class="component pickup-component"><circle cx="92" cy="182" r="22"/><path d="M76 182 q8 -15 16 0 q8 15 16 0"/><path d="M135 105 l11 -15 13 30 13 -30 13 30 13 -30 27 15"/></g>
+  <g class="wire"><line x1="92" y1="105" x2="92" y2="160"/><line x1="92" y1="204" x2="92" y2="260"/><line x1="510" y1="105" x2="510" y2="135"/><line x1="510" y1="220" x2="510" y2="260"/></g>
+  <g class="component control-component"><path d="M285 78v54M300 78v54"/><path d="M510 135 l-12 10 24 13 -24 13 24 13 -24 13 12 23"/></g>
+  <g class="component cable-component"><path d="M510 105 h35 l11 -15 13 30 13 -30 13 30 13 -30 25 15 h17"/><path d="${coilPath}"/><path d="M855 105 v42 m-17 0 h34 m-34 14 h34 m-17 0 v99"/></g>
+  <g class="component amp-component"><path d="M1020 105 v30 l-13 10 26 14 -26 14 26 14 -13 10 v63"/></g>
+  <g class="node"><circle cx="510" cy="105" r="5"/><circle cx="855" cy="105" r="5"/><circle cx="1020" cy="105" r="5"/></g>
+  <g><text x="50" y="292">internal signal</text><text x="155" y="67">R<tspan baseline-shift="sub">out</tspan></text><text class="value" x="150" y="86">${v("sourceR", "Ω")}</text><text x="270" y="55">C<tspan baseline-shift="sub">out</tspan></text><text class="value" x="342" y="87">${v("outputC", "F")}</text><text x="445" y="167">R<tspan baseline-shift="sub">pull-down</tspan></text><text class="value" x="437" y="190">${v("pullDownR", "Ω")}</text><text x="548" y="66">R<tspan baseline-shift="sub">cable</tspan></text><text class="value" x="542" y="143">${formatValue(totals.cableR, "Ω")}</text><text x="684" y="60">L<tspan baseline-shift="sub">cable</tspan></text><text class="value" x="675" y="82">${formatValue(totals.cableL, "H")} / ${coilTurns} loops</text><text x="878" y="150">C<tspan baseline-shift="sub">cable</tspan></text><text class="value" x="878" y="174">${formatValue(totals.cableC, "F")}</text><text x="1040" y="150">R<tspan baseline-shift="sub">in</tspan></text><text class="value" x="1040" y="174">${v("loadR", "Ω")}</text><text x="1040" y="89">V<tspan baseline-shift="sub">out</tspan></text><text x="650" y="292">長さ ${v("cableLength", "m")} × 単位長定数</text></g>`;
 }
 
 function canvasSetup(canvas) {
@@ -314,6 +368,24 @@ function updateLine() {
   $("lExplain").textContent = `${formatValue(line.cableLength, "m")}の合計は R ${formatValue(totals.cableR, "Ω")} / L ${formatValue(totals.cableL, "H")} / C ${formatValue(totals.cableC, "F")}。低周波の抵抗分圧は ${divisionDb.toFixed(2)} dBです。`;
 }
 
+function updateEffector() {
+  $("eCircuit").innerHTML = effectorCircuitSvg();
+  const current = frequencies.map((f) => dB(magnitude(effectorTransfer(effector, f))));
+  const base = frequencies.map((f) => dB(magnitude(effectorTransfer(effectorBaseline, f))));
+  drawFrequencyPlot($("ePlot"), current, base);
+  const totals = lineTotals(effector);
+  const effectiveLoadR = 1 / (1 / effector.pullDownR + 1 / (effector.loadR + totals.cableR));
+  const estimatedFc = 1 / (2 * Math.PI * effector.outputC * (effector.sourceR + effectiveLoadR));
+  const midband = dB(magnitude(effectorTransfer(effector, 1000)));
+  $("eSummary").textContent = `Cout低域fc概算 ${formatFrequency(estimatedFc)} / 1 kHz ${midband.toFixed(2)} dB`;
+  $("eExplain").textContent = `CoutはDCを遮断し、Rout＋（Rpull-down ∥ 次段Rin）との組み合わせで低域を減衰させます。概算fcは${formatFrequency(estimatedFc)}です。高域側は主にRoutとケーブル合計C ${formatValue(totals.cableC, "F")}の組み合わせで変化します。`;
+}
+
+function formatFrequency(value) {
+  if (value >= 1000) return `${trim(value / 1000)} kHz`;
+  return `${trim(value)} Hz`;
+}
+
 function applyGuitarPreset(name) {
   Object.assign(guitar, guitarPresets[name]);
   guitarBaseline = { ...guitar };
@@ -331,6 +403,15 @@ function applyLinePreset(name) {
   updateLine();
 }
 
+function applyEffectorPreset(name) {
+  Object.assign(effector, effectorPresets[name]);
+  effectorBaseline = { ...effector };
+  refreshControls($("eControls"), effectorDefs, effector);
+  $("ePresetNote").textContent = effectorPresetNotes[name];
+  $("eCablePreset").value = "standard";
+  updateEffector();
+}
+
 function applyGuitarCablePreset(name) {
   if (name === "custom") return;
   Object.assign(guitar, guitarCablePresets[name]);
@@ -345,14 +426,21 @@ function applyLineCablePreset(name) {
   updateLine();
 }
 
+function applyEffectorCablePreset(name) {
+  if (name === "custom") return;
+  Object.assign(effector, lineCablePresets[name]);
+  refreshControls($("eControls"), effectorDefs, effector);
+  updateEffector();
+}
+
 function switchTab(tab) {
-  ["guitar", "line"].forEach((name) => {
+  ["guitar", "line", "effector"].forEach((name) => {
     const active = name === tab;
     $(`tab-${name}`).classList.toggle("is-active", active);
     $(`tab-${name}`).setAttribute("aria-selected", String(active));
     $(`panel-${name}`).hidden = !active;
   });
-  requestAnimationFrame(() => { if (tab === "guitar") updateGuitar(); if (tab === "line") updateLine(); });
+  requestAnimationFrame(() => { if (tab === "guitar") updateGuitar(); if (tab === "line") updateLine(); if (tab === "effector") updateEffector(); });
 }
 
 createControls($("gControls"), guitarDefs, guitar, (key) => {
@@ -363,24 +451,33 @@ createControls($("lControls"), lineDefs, line, (key) => {
   if (["cableResPerM", "cableIndPerM", "cableCapPerM"].includes(key)) $("lCablePreset").value = "custom";
   updateLine();
 });
+createControls($("eControls"), effectorDefs, effector, (key) => {
+  if (["cableResPerM", "cableIndPerM", "cableCapPerM"].includes(key)) $("eCablePreset").value = "custom";
+  updateEffector();
+});
 $("gPreset").addEventListener("change", (e) => applyGuitarPreset(e.target.value));
 $("lPreset").addEventListener("change", (e) => applyLinePreset(e.target.value));
+$("ePreset").addEventListener("change", (e) => applyEffectorPreset(e.target.value));
 $("gCablePreset").addEventListener("change", (e) => applyGuitarCablePreset(e.target.value));
 $("lCablePreset").addEventListener("change", (e) => applyLineCablePreset(e.target.value));
+$("eCablePreset").addEventListener("change", (e) => applyEffectorCablePreset(e.target.value));
 $("gReset").addEventListener("click", () => applyGuitarPreset($("gPreset").value));
 $("lReset").addEventListener("click", () => applyLinePreset($("lPreset").value));
-["guitar", "line"].forEach((name) => $(`tab-${name}`).addEventListener("click", () => switchTab(name)));
+$("eReset").addEventListener("click", () => applyEffectorPreset($("ePreset").value));
+["guitar", "line", "effector"].forEach((name) => $(`tab-${name}`).addEventListener("click", () => switchTab(name)));
 $("themeButton").addEventListener("click", () => {
   const dark = document.documentElement.dataset.theme === "dark";
   document.documentElement.dataset.theme = dark ? "light" : "dark";
-  updateGuitar(); updateLine();
+  updateGuitar(); updateLine(); updateEffector();
 });
 
 const observer = new ResizeObserver(() => {
   clearTimeout(observer.timer);
-  observer.timer = setTimeout(() => { updateGuitar(); updateLine(); }, 80);
+  observer.timer = setTimeout(() => { updateGuitar(); updateLine(); updateEffector(); }, 80);
 });
 observer.observe(document.body);
 updateGuitar();
 updateLine();
+updateEffector();
 $("gPresetNote").textContent = guitarPresetNotes[$("gPreset").value];
+$("ePresetNote").textContent = effectorPresetNotes[$("ePreset").value];

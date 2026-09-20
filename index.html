@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="ギター、エフェクター出力、オーディオ配線の周波数特性を回路図とともに学べるブラウザシミュレータ">
   <title>Audio Impedance Lab</title>
-  <link rel="stylesheet" href="styles.css?v=20260920-frames4">
+  <link rel="stylesheet" href="styles.css?v=20260920-cout5">
 </head>
 <body>
   <header class="site-header">
@@ -146,14 +146,14 @@
         </aside>
         <div class="visuals">
           <aside class="model-note">
-            <b>対地抵抗を入れる理由：</b>
-            R<sub>pull-down</sub>は出力端子のDC電位を安定させ、接続時のポップノイズを抑えるための抵抗です。C<sub>out</sub>と組み合わせると低域のハイパス特性にも関与します。ここではR<sub>out</sub>とは別の部品として扱います。
+            <b>このモードの並び：</b>
+            内部信号源 → C<sub>out</sub> → 出力直列R<sub>out</sub> → 出力端子です。C<sub>out</sub>とR<sub>out</sub>の間は、将来Volume potを対地接続できる節点として扱います（現在のモデルにVolume potは含みません）。R<sub>pull-down</sub>は出力端子のDC電位を安定させ、接続時のポップノイズを抑える独立した対地抵抗です。
           </aside>
           <article class="panel">
-            <div class="panel-title"><h2>エフェクター出力を電気回路に置き換えると</h2><span>CoutとRpull-downを独立して変更できます</span></div>
+            <div class="panel-title"><h2>エフェクター出力を電気回路に置き換えると</h2><span>Cout後の直列RoutとRpull-downを独立して変更できます</span></div>
             <svg id="eCircuit" class="circuit" viewBox="0 0 1180 320" role="img" aria-labelledby="eCircuitTitle eCircuitDesc">
               <title id="eCircuitTitle">エフェクター出力、カップリングコンデンサ、対地抵抗、ケーブル、次段入力の等価回路</title>
-              <desc id="eCircuitDesc">内部電圧源、出力抵抗、直列出力カップリングコンデンサ、出力対地抵抗、ケーブルの直列抵抗とインダクタンスおよび対地容量、次段入力抵抗を示す。</desc>
+              <desc id="eCircuitDesc">内部電圧源、出力カップリングコンデンサ、Cout後の出力直列抵抗、出力対地抵抗、ケーブルの直列抵抗とインダクタンスおよび対地容量、次段入力抵抗を示す。</desc>
             </svg>
           </article>
           <article class="panel plot-panel">
@@ -168,7 +168,7 @@
 
     <section class="assumptions">
       <h2>モデルの前提</h2>
-      <p>受動・線形・集中定数モデルです。ピックアップは R–L と自己容量・損失抵抗、Volumeは10%オーディオテーパー相当の3端子ポット、Toneも同じテーパーの可変抵抗として近似します。アンプ入力容量はMiller効果を含む実効値です。エフェクター出力は理想信号源にRout、Cout、出力対地抵抗を加えた小信号モデルで、能動回路の歪みや電源依存性は含みません。絶対的な「音色」ではなく電気負荷による変化の比較に向きます。</p>
+      <p>受動・線形・集中定数モデルです。ピックアップは R–L と自己容量・損失抵抗、Volumeは10%オーディオテーパー相当の3端子ポット、Toneも同じテーパーの可変抵抗として近似します。アンプ入力容量はMiller効果を含む実効値です。エフェクター出力は理想信号源にCout、Cout後の直列Rout、出力対地抵抗を加えた小信号モデルで、能動回路の歪みや電源依存性は含みません。絶対的な「音色」ではなく電気負荷による変化の比較に向きます。</p>
     </section>
   </main>
 
@@ -185,6 +185,6 @@
       <div class="dialog-actions"><button class="quiet-button" value="cancel" type="button" id="valueCancel">キャンセル</button><button class="quiet-button primary-button" value="default" type="submit">適用</button></div>
     </form>
   </dialog>
-  <script src="app.js?v=20260920-frames4"></script>
+  <script src="app.js?v=20260920-cout5"></script>
 </body>
 </html>

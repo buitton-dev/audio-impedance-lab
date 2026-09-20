@@ -376,7 +376,6 @@ function connectionCircuitSvg(model) {
     s+=wire("M75 140H145M225 140H300M380 140H600M510 140V180M510 260V320");
     s+=capacitor(185,140)+resistor(340,140)+resistor(510,220,true)+node(510);
     s+=label(185,"Cout","outputC")+label(340,"直列 Rout","sourceR")+label(510,"Rpull-down","pullDownR",365);
-    s+=text(262,185,"Volume pot追加候補点");
   } else {
     s+=wire("M75 140H160M240 140H600")+resistor(200,140)+label(200,"Rout","sourceR");
   }

@@ -15,41 +15,65 @@ const dB = (v) => 20 * Math.log10(Math.max(v, 1e-12));
 const logspace = (start, end, count) => Array.from({ length: count }, (_, i) => start * Math.pow(end / start, i / (count - 1)));
 const frequencies = logspace(20, 20000, 401);
 
+const E24 = [1, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2, 2.2, 2.4, 2.7, 3, 3.3, 3.6, 3.9, 4.3, 4.7, 5.1, 5.6, 6.2, 6.8, 7.5, 8.2, 9.1];
+
+function preferredValues(min, max, step, extras = []) {
+  const smallest = min > 0 ? min : step;
+  const values = min === 0 ? [0] : [];
+  const firstDecade = Math.floor(Math.log10(smallest));
+  const lastDecade = Math.ceil(Math.log10(max));
+  for (let decade = firstDecade; decade <= lastDecade; decade += 1) {
+    const multiplier = Math.pow(10, decade);
+    E24.forEach((base) => {
+      const value = Number((base * multiplier).toPrecision(12));
+      if (value >= min && value <= max) values.push(value);
+    });
+  }
+  extras.forEach((value) => {
+    if (value >= min && value <= max) values.push(Number(value.toPrecision(12)));
+  });
+  return [...new Set(values)].sort((a, b) => a - b);
+}
+
+function preferredDef(def, extras = []) {
+  return { ...def, values: preferredValues(def.min, def.max, def.step, extras) };
+}
+
 const guitarDefs = [
-  { key: "pickupR", label: "Pickup DCR", unit: "Ω", min: 2000, max: 15000, step: 100 },
-  { key: "pickupL", label: "Pickup inductance", unit: "H", min: 0.5, max: 8, step: 0.1 },
-  { key: "pickupC", label: "Pickup self C", unit: "F", min: 15e-12, max: 300e-12, step: 5e-12 },
-  { key: "pickupLossR", label: "Resonance damping R", unit: "Ω", min: 300000, max: 3000000, step: 50000 },
-  { key: "volumeR", label: "Volume pot value", unit: "Ω", min: 100000, max: 1000000, step: 10000 },
+  preferredDef({ key: "pickupR", label: "Pickup DCR", unit: "Ω", min: 2000, max: 15000, step: 100 }, [5400, 6000, 7500]),
+  preferredDef({ key: "pickupL", label: "Pickup inductance", unit: "H", min: 0.5, max: 8, step: 0.1 }, [2.1, 2.5, 5]),
+  preferredDef({ key: "pickupC", label: "Pickup self C", unit: "F", min: 15e-12, max: 300e-12, step: 5e-12 }, [100e-12]),
+  preferredDef({ key: "pickupLossR", label: "Resonance damping R", unit: "Ω", min: 300000, max: 3000000, step: 50000 }, [1e6]),
+  preferredDef({ key: "volumeR", label: "Volume pot value", unit: "Ω", min: 100000, max: 1000000, step: 10000 }, [250000, 500000]),
   { key: "volumePosition", label: "Volume knob", unit: "knob", min: 0, max: 10, step: 0.1 },
-  { key: "toneR", label: "Tone pot value", unit: "Ω", min: 100000, max: 1000000, step: 10000 },
+  preferredDef({ key: "toneR", label: "Tone pot value", unit: "Ω", min: 100000, max: 1000000, step: 10000 }, [250000, 500000]),
   { key: "tonePosition", label: "Tone knob", unit: "knob", min: 0, max: 10, step: 0.1 },
-  { key: "toneC", label: "Tone capacitor", unit: "F", min: 10e-9, max: 100e-9, step: 1e-9 },
+  preferredDef({ key: "toneC", label: "Tone capacitor", unit: "F", min: 10e-9, max: 100e-9, step: 1e-9 }, [22e-9, 47e-9]),
   { key: "cableLength", label: "Cable length", unit: "m", min: 0.5, max: 20, step: 0.5 },
-  { key: "cableCapPerM", label: "Cable capacitance", unit: "F/m", min: 50e-12, max: 200e-12, step: 5e-12 },
-  { key: "ampInputR", label: "Amp input R", unit: "Ω", min: 50000, max: 2000000, step: 10000 },
-  { key: "ampSeriesR", label: "Grid stopper R", unit: "Ω", min: 0, max: 100000, step: 1000 },
-  { key: "ampInputC", label: "Effective input C", unit: "F", min: 10e-12, max: 500e-12, step: 5e-12 }
+  preferredDef({ key: "cableCapPerM", label: "Cable capacitance", unit: "F/m", min: 50e-12, max: 200e-12, step: 5e-12 }, [70e-12, 100e-12, 160e-12]),
+  preferredDef({ key: "ampInputR", label: "Amp input R", unit: "Ω", min: 50000, max: 2000000, step: 10000 }, [1e6]),
+  preferredDef({ key: "ampSeriesR", label: "Grid stopper R", unit: "Ω", min: 0, max: 100000, step: 1000 }, [0, 22000, 34000, 68000]),
+  preferredDef({ key: "ampInputC", label: "Effective input C", unit: "F", min: 10e-12, max: 500e-12, step: 5e-12 }, [100e-12])
 ];
 
 const lineDefs = [
-  { key: "sourceR", label: "Source Rout", unit: "Ω", min: 10, max: 200000, step: 10, scale: "log" },
-  { key: "loadR", label: "Load Rin", unit: "Ω", min: 100, max: 2000000, step: 100, scale: "log" },
+  preferredDef({ key: "sourceR", label: "Source Rout", unit: "Ω", min: 10, max: 200000, step: 10 }, [100, 10000, 100000]),
+  preferredDef({ key: "loadR", label: "Load Rin", unit: "Ω", min: 100, max: 2000000, step: 100 }, [10000, 100000, 1e6]),
   { key: "cableLength", label: "Cable length", unit: "m", min: 0.5, max: 20, step: 0.5 },
-  { key: "cableResPerM", label: "Cable R / m", unit: "Ω/m", min: 0, max: 1, step: 0.01 },
-  { key: "cableIndPerM", label: "Cable L / m", unit: "H/m", min: 0, max: 2e-6, step: 0.05e-6 },
-  { key: "cableCapPerM", label: "Cable C / m", unit: "F/m", min: 50e-12, max: 200e-12, step: 5e-12 }
+  preferredDef({ key: "cableResPerM", label: "Cable R / m", unit: "Ω/m", min: 0, max: 1, step: 0.01 }, [0, 0.04, 0.043, 0.1]),
+  preferredDef({ key: "cableIndPerM", label: "Cable L / m", unit: "H/m", min: 0, max: 2e-6, step: 0.05e-6 }, [0, 0.5e-6]),
+  preferredDef({ key: "cableCapPerM", label: "Cable C / m", unit: "F/m", min: 50e-12, max: 200e-12, step: 5e-12 }, [70e-12, 100e-12, 160e-12])
 ];
 
 const effectorDefs = [
-  { key: "sourceR", label: "Output Rout", unit: "Ω", min: 10, max: 100000, step: 10, scale: "log" },
-  { key: "outputC", label: "Output coupling Cout", unit: "F", min: 10e-9, max: 10e-6, step: 10e-9, scale: "log" },
-  { key: "pullDownR", label: "Output pull-down R", unit: "Ω", min: 10000, max: 2000000, step: 1000, scale: "log" },
-  { key: "loadR", label: "Next input Rin", unit: "Ω", min: 10000, max: 2000000, step: 1000, scale: "log" },
+  preferredDef({ key: "sourceR", label: "Output Rout", unit: "Ω", min: 10, max: 100000, step: 10 }, [1000, 10000, 100000]),
+  preferredDef({ key: "outputC", label: "Output coupling Cout", unit: "F", min: 10e-9, max: 10e-6, step: 10e-9 }, [100e-9, 1e-6]),
+  preferredDef({ key: "pullDownR", label: "Output pull-down R", unit: "Ω", min: 10000, max: 2000000, step: 1000 }, [100000, 1e6]),
+  preferredDef({ key: "loadR", label: "Next input Rin", unit: "Ω", min: 10000, max: 2000000, step: 1000 }, [10000, 1e6]),
   { key: "cableLength", label: "Cable length", unit: "m", min: 0.5, max: 20, step: 0.5 },
-  { key: "cableResPerM", label: "Cable R / m", unit: "Ω/m", min: 0, max: 1, step: 0.01 },
-  { key: "cableIndPerM", label: "Cable L / m", unit: "H/m", min: 0, max: 2e-6, step: 0.05e-6 },
-  { key: "cableCapPerM", label: "Cable C / m", unit: "F/m", min: 50e-12, max: 200e-12, step: 5e-12 }
+  preferredDef({ key: "cableResPerM", label: "Cable R / m", unit: "Ω/m", min: 0, max: 1, step: 0.01 }, [0, 0.04, 0.043, 0.1]),
+  preferredDef({ key: "cableIndPerM", label: "Cable L / m", unit: "H/m", min: 0, max: 2e-6, step: 0.05e-6 }, [0, 0.5e-6]),
+  preferredDef({ key: "cableCapPerM", label: "Cable C / m", unit: "F/m", min: 50e-12, max: 200e-12, step: 5e-12 }, [70e-12, 100e-12, 160e-12])
 ];
 
 const guitarPresets = {
@@ -131,6 +155,20 @@ function trim(v) {
   return v.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
 }
 
+function nearestPreferredIndex(def, value) {
+  if (!def.values?.length) return -1;
+  let best = 0;
+  let bestDistance = Math.abs(def.values[0] - value);
+  for (let i = 1; i < def.values.length; i += 1) {
+    const distance = Math.abs(def.values[i] - value);
+    if (distance < bestDistance) {
+      best = i;
+      bestDistance = distance;
+    }
+  }
+  return best;
+}
+
 function createControls(host, defs, state, onChange) {
   host.innerHTML = "";
   defs.forEach((def) => {
@@ -146,7 +184,12 @@ function createControls(host, defs, state, onChange) {
     const input = document.createElement("input");
     input.type = "range";
     input.id = `${host.id}-${def.key}`;
-    if (def.scale === "log") {
+    if (def.values) {
+      input.min = 0;
+      input.max = def.values.length - 1;
+      input.step = 1;
+      input.value = nearestPreferredIndex(def, state[def.key]);
+    } else if (def.scale === "log") {
       input.min = Math.log10(def.min);
       input.max = Math.log10(def.max);
       input.step = 0.001;
@@ -159,7 +202,7 @@ function createControls(host, defs, state, onChange) {
     }
     input.setAttribute("aria-label", def.label);
     input.addEventListener("input", () => {
-      state[def.key] = def.scale === "log" ? Math.pow(10, Number(input.value)) : Number(input.value);
+      state[def.key] = def.values ? def.values[Number(input.value)] : def.scale === "log" ? Math.pow(10, Number(input.value)) : Number(input.value);
       out.textContent = formatValue(state[def.key], def.unit);
       onChange(def.key);
     });
@@ -171,7 +214,7 @@ function createControls(host, defs, state, onChange) {
 function refreshControls(host, defs, state) {
   defs.forEach((def) => {
     const input = $(`${host.id}-${def.key}`);
-    input.value = def.scale === "log" ? Math.log10(state[def.key]) : state[def.key];
+    input.value = def.values ? nearestPreferredIndex(def, state[def.key]) : def.scale === "log" ? Math.log10(state[def.key]) : state[def.key];
     $(`${host.id}-${def.key}-out`).textContent = formatValue(state[def.key], def.unit);
   });
 }
@@ -357,7 +400,6 @@ function updateGuitar() {
   const totalCap = guitar.pickupC + guitar.cableLength * guitar.cableCapPerM + guitar.ampInputC;
   const ideal = 1 / (2 * Math.PI * Math.sqrt(guitar.pickupL * totalCap));
   $("gExplain").textContent = `これは弦・ボディ・スピーカーを含まない電気的伝達特性 Vgrid / 内部EMF です。Lと対地容量から見積もる無損失共振は約${Math.round(ideal).toLocaleString()} Hz。DCR・損失抵抗・ポット位置・アンプ入力が実際のピークを変えます。`;
-  updateGuide("guitar");
 }
 
 function updateLine() {
@@ -371,7 +413,6 @@ function updateLine() {
   const divisionDb = dB(dcGain);
   $("lSummary").textContent = info.cutoff ? `−3 dB帯域 ≈ ${Math.round(info.cutoff).toLocaleString()} Hz` : "20 kHz内に追加の−3 dB点なし";
   $("lExplain").textContent = `${formatValue(line.cableLength, "m")}の合計は R ${formatValue(totals.cableR, "Ω")} / L ${formatValue(totals.cableL, "H")} / C ${formatValue(totals.cableC, "F")}。低周波の抵抗分圧は ${divisionDb.toFixed(2)} dBです。`;
-  updateGuide("line");
 }
 
 function updateEffector() {
@@ -385,56 +426,11 @@ function updateEffector() {
   const midband = dB(magnitude(effectorTransfer(effector, 1000)));
   $("eSummary").textContent = `Cout低域fc概算 ${formatFrequency(estimatedFc)} / 1 kHz ${midband.toFixed(2)} dB`;
   $("eExplain").textContent = `CoutはDCを遮断し、Rout＋（Rpull-down ∥ 次段Rin）との組み合わせで低域を減衰させます。概算fcは${formatFrequency(estimatedFc)}です。高域側は主にRoutとケーブル合計C ${formatValue(totals.cableC, "F")}の組み合わせで変化します。`;
-  updateGuide("effector");
 }
 
 function formatFrequency(value) {
   if (value >= 1000) return `${trim(value / 1000)} kHz`;
   return `${trim(value)} Hz`;
-}
-
-const guideTargets = {
-  guitar: { key: "cableLength", target: 10, tolerance: 0.5 },
-  line: { key: "sourceR", target: 100000, tolerance: 5000 },
-  effector: { key: "outputC", target: 100e-9, tolerance: 10e-9 }
-};
-const activeGuides = new Set();
-
-function guideIsComplete(model) {
-  const guide = guideTargets[model];
-  if (guide.control) return $(guide.control).value === guide.target;
-  const state = modelConfigs[model].state;
-  return Math.abs(state[guide.key] - guide.target) <= guide.tolerance;
-}
-
-function updateGuide(model) {
-  if (!activeGuides.has(model)) return;
-  const guide = guideTargets[model];
-  const prefix = model === "guitar" ? "g" : model === "line" ? "l" : "e";
-  const complete = guideIsComplete(model);
-  const status = $(`${prefix}GuideStatus`);
-  if (complete) {
-    status.textContent = model === "guitar" ? "完了：共振ピークが低周波側へ移動しました。" : model === "line" ? "完了：レベル低下と高域側の変化を初期値の破線と比較してください。" : "完了：低域遮断周波数が約17 Hzまで上がりました。";
-  } else {
-    status.textContent = model === "guitar" ? "強調されたCable lengthを上へドラッグしてください。" : model === "line" ? "強調されたRoutを上へドラッグしてください。" : "強調されたCoutを下へドラッグしてください。";
-  }
-  if (guide.control) {
-    $(guide.control).classList.toggle("guide-focus-control", !complete);
-    return;
-  }
-  const target = document.querySelector(`.interactive-value[data-model="${model}"][data-key="${guide.key}"]`);
-  if (target) target.classList.add(complete ? "guide-complete" : "guide-focus");
-}
-
-function showGuide(model) {
-  activeGuides.add(model);
-  updateGuide(model);
-  const guide = guideTargets[model];
-  const target = guide.control ? $(guide.control) : document.querySelector(`.interactive-value[data-model="${model}"][data-key="${guide.key}"]`);
-  if (target) {
-    target.focus({ preventScroll: true });
-    target.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
-  }
 }
 
 function applyGuitarPreset(name) {
@@ -499,6 +495,7 @@ function clamp(value, min, max) {
 }
 
 function roundedToStep(value, def) {
+  if (def.values?.length) return def.values[nearestPreferredIndex(def, value)];
   if (!def.step) return clamp(value, def.min, def.max);
   const steps = Math.round((value - def.min) / def.step);
   const rounded = def.min + steps * def.step;
@@ -509,16 +506,22 @@ function setModelValue(model, key, value, round = true) {
   const config = modelConfigs[model];
   const def = defFor(model, key);
   if (!config || !def || !Number.isFinite(value)) return;
-  config.state[key] = round ? roundedToStep(value, def) : clamp(value, def.min, def.max);
+  config.state[key] = def.values ? roundedToStep(value, def) : round ? roundedToStep(value, def) : clamp(value, def.min, def.max);
   refreshControls($(config.controls), config.defs, config.state);
   config.update();
 }
 
 function usesLogDrag(def) {
-  return ["Ω", "F", "H"].includes(def.unit);
+  return ["Ω", "F", "H", "Ω/m", "F/m", "H/m"].includes(def.unit);
 }
 
 function draggedValue(def, startValue, deltaY, fine) {
+  if (def.values?.length) {
+    const startIndex = nearestPreferredIndex(def, startValue);
+    const pixelsPerStep = fine ? 45 : 15;
+    const index = clamp(startIndex - Math.round(deltaY / pixelsPerStep), 0, def.values.length - 1);
+    return def.values[index];
+  }
   const sensitivity = fine ? 5 : 1;
   if (usesLogDrag(def)) return startValue * Math.pow(10, -deltaY / (120 * sensitivity));
   return startValue - deltaY * (def.max - def.min) / (240 * sensitivity);
@@ -569,7 +572,9 @@ function attachCircuitInteraction(model) {
     event.preventDefault();
     const direction = event.key === "ArrowUp" ? 1 : -1;
     const current = modelConfigs[model].state[key];
-    const value = usesLogDrag(def) ? current * Math.pow(10, direction / (event.shiftKey ? 60 : 12)) : current + direction * def.step * (event.shiftKey ? 0.2 : 1);
+    const value = def.values?.length
+      ? def.values[clamp(nearestPreferredIndex(def, current) + direction, 0, def.values.length - 1)]
+      : usesLogDrag(def) ? current * Math.pow(10, direction / (event.shiftKey ? 60 : 12)) : current + direction * def.step * (event.shiftKey ? 0.2 : 1);
     setModelValue(model, key, value, !event.shiftKey);
     requestAnimationFrame(() => document.querySelector(`.interactive-value[data-model="${model}"][data-key="${key}"]`)?.focus());
   });
@@ -606,7 +611,9 @@ function openValueDialog(model, key) {
   $("valueUnit").textContent = converted.unit;
   const min = engineeringInput(def.min, def.unit);
   const max = engineeringInput(def.max, def.unit);
-  $("valueRange").textContent = `設定範囲：${formatValue(def.min, def.unit)} ～ ${formatValue(def.max, def.unit)}`;
+  $("valueRange").textContent = def.values
+    ? `設定範囲：${formatValue(def.min, def.unit)} ～ ${formatValue(def.max, def.unit)}（入力値は最も近いE24系列・用途固有値へ丸めます）`
+    : `設定範囲：${formatValue(def.min, def.unit)} ～ ${formatValue(def.max, def.unit)}`;
   $("valueInput").min = min.multiplier === converted.multiplier ? min.value : def.min / converted.multiplier;
   $("valueInput").max = max.multiplier === converted.multiplier ? max.value : def.max / converted.multiplier;
   $("valueDialog").showModal();
@@ -646,9 +653,6 @@ createControls($("eControls"), effectorDefs, effector, (key) => {
   updateEffector();
 });
 ["guitar", "line", "effector"].forEach(attachCircuitInteraction);
-$("gGuideButton").addEventListener("click", () => showGuide("guitar"));
-$("lGuideButton").addEventListener("click", () => showGuide("line"));
-$("eGuideButton").addEventListener("click", () => showGuide("effector"));
 $("gPreset").addEventListener("change", (e) => applyGuitarPreset(e.target.value));
 $("lPreset").addEventListener("change", (e) => applyLinePreset(e.target.value));
 $("ePreset").addEventListener("change", (e) => applyEffectorPreset(e.target.value));

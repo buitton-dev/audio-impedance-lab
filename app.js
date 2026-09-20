@@ -285,7 +285,7 @@ function interactiveValue(model, key, text, x, y, label) {
 // Circuit geometry and labels occupy separate lanes. All returns share the lower rail.
 function circuitLayout(model, width) {
   const config = modelConfigs[model];
-  $(config.circuit).setAttribute("viewBox", `0 0 ${width} 480`);
+  $(config.circuit).setAttribute("viewBox", `0 -100 ${width} 620`);
   $(config.circuit).style.minWidth = `${width * 0.75}px`;
   $(config.circuit).parentElement.style.overflowX = "auto";
   const wire = (path) => `<path class="wire" d="${path}"/>`;
@@ -305,9 +305,34 @@ function circuitLayout(model, width) {
   return {wire,node,text,value,label,resistor,capacitor,source,ground};
 }
 
+// Dashed outlines describe physical equipment, not additional electrical connections.
+function equipmentFrame(x, width, title, icon, color, nested = false) {
+  const y = nested ? -22 : -88;
+  const height = nested ? 480 : 574;
+  const paths = {
+    guitar: "M18 3v19m-5-19h10M13 20c-12 1-12 20 5 20s17-19 5-20M18 26v9",
+    pickup: "M8 5h22v34H8zM13 12h12M13 20h12M13 28h12",
+    cable: "M5 8v17c0 18 28 18 28 0V8M1 4h8v8H1zM29 4h8v8h-8z",
+    amp: "M3 4h34v36H3zM9 10h4m5 0h4M20 17a9 9 0 1 0 0 18a9 9 0 1 0 0-18",
+    pedal: "M6 3h28v38H6zM20 9v7m-7 13h14m-10 7h6",
+    source: "M3 5h34v34H3zM8 22q6-14 12 0t12 0"
+  };
+  return `<g class="equipment-frame" aria-label="${title}">
+    <rect x="${x}" y="${y}" width="${width}" height="${height}" rx="12"
+      fill="none" stroke="${color}" stroke-width="2" stroke-dasharray="${nested ? "4 5" : "10 7"}" pointer-events="none"/>
+    <g transform="translate(${x+14} ${y+10}) scale(.7)" fill="none" stroke="${color}" stroke-width="2.5" aria-hidden="true"><path d="${paths[icon]}"/></g>
+    <text x="${x+52}" y="${y+31}" style="font-size:20px;font-weight:700;fill:${color}">${title}</text>
+  </g>`;
+}
+
 function guitarCircuitSvg() {
   const {wire,node,text,value,label,resistor,capacitor,source,ground} = circuitLayout("guitar",1800);
-  let s = source+ground;
+  let s = equipmentFrame(12,1160,"ギター本体","guitar","var(--warm)")+
+    equipmentFrame(24,640,"ピックアップ","pickup","var(--accent)",true)+
+    equipmentFrame(1186,178,"シールド","cable","var(--stage-cable)")+
+    equipmentFrame(1378,408,"アンプ入力","amp","var(--stage-amp)")+
+    source+ground;
+  s += text(345,432,"コイルの性質を表す等価回路（個別の部品ではありません）");
   s += wire("M75 140H110M190 140H210M290 140H960M1040 220H1460M1540 220H1700");
   s += '<g class="component"><path d="'+horizontalInductorPath(110,190,140,4)+'"/></g>';
   s += resistor(250,140)+label(150,"Pickup L","pickupL")+label(250,"DCR","pickupR");
@@ -339,7 +364,10 @@ function connectionCircuitSvg(model) {
   const totals = lineTotals(state);
   const {wire,node,text,value,label,resistor,capacitor,source,ground} = circuitLayout(model,1400);
   const turns = totals.cableL <= 0 ? 0 : Math.round(3+6*Math.log10(1+totals.cableL/0.5e-6)/Math.log10(81));
-  let s=source+ground+wire("M75 140H160M240 140H330")+resistor(200,140)+label(200,"Rout","sourceR");
+  let s=equipmentFrame(12,570,effect ? "エフェクター本体" : "送り出す機器",effect ? "pedal" : "source","var(--warm)")+
+    equipmentFrame(596,540,"ケーブル","cable","var(--stage-cable)")+
+    equipmentFrame(1150,238,effect ? "次段機器" : "受ける機器","amp","var(--stage-amp)")+
+    source+ground+wire("M75 140H160M240 140H330")+resistor(200,140)+label(200,"Rout","sourceR");
   if(effect) {
     s+=capacitor(370,140)+wire("M410 140H600M510 140V180M510 260V320");
     s+=resistor(510,220,true)+node(510)+label(370,"Cout","outputC")+label(510,"Rpull-down","pullDownR",365);

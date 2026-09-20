@@ -36,6 +36,12 @@ function preferredValues(min, max, step, extras = []) {
 }
 
 function preferredDef(def, extras = []) {
+  // Deliberately nonphysical exploration ranges; cable constants retain their ranges.
+  if (!def.key.startsWith("cable")) {
+    const ranges = { "Ω": [1, 1e8], "H": [1e-6, 100], "F": [1e-12, 1e-3] };
+    const range = ranges[def.unit];
+    if (range) def = { ...def, min: def.min === 0 ? 0 : range[0], max: range[1], step: range[0] };
+  }
   return { ...def, values: preferredValues(def.min, def.max, def.step, extras) };
 }
 
@@ -286,6 +292,17 @@ function interactiveValue(model, key, text, x, y, label) {
   return `<text class="value interactive-value" x="${x}" y="${y}" data-model="${model}" data-key="${key}" role="button" tabindex="0" aria-label="${label} ${text}。上下ドラッグまたは矢印キーで変更。クリックで数値入力">${text} ↕</text>`;
 }
 
+// 60 SVG units = at least 45 CSS px at the minimum diagram width.
+// Overlay only component bodies, leaving the surrounding diagram scrollable.
+function symbolTargets(model, targets) {
+  return targets.map(([key, x, y, vertical = false]) => {
+    const config = modelConfigs[model];
+    const def = config.defs.find(item => item.key === key);
+    const width = vertical ? 60 : 90, height = vertical ? 90 : 60;
+    return `<rect class="interactive-symbol" x="${x-width/2}" y="${y-height/2}" width="${width}" height="${height}" rx="8" data-model="${model}" data-key="${key}" role="button" tabindex="0" aria-label="${def.label} ${formatValue(config.state[key], def.unit)}。上下ドラッグで変更、タップで数値入力"/>`;
+  }).join("");
+}
+
 // Circuit geometry and labels occupy separate lanes. All returns share the lower rail.
 function circuitLayout(model, width) {
   const config = modelConfigs[model];
@@ -359,6 +376,12 @@ function guitarCircuitSvg() {
   s += label(1280,"Cable length","cableLength",365)+text(1280,425,"合計C "+formatValue(guitar.cableLength*guitar.cableCapPerM,"F"));
   s += label(1450,"Amp Rin","ampInputR",365)+label(1500,"Grid stopper","ampSeriesR",150);
   s += label(1650,"実効入力C","ampInputC",365)+text(1710,195,"Vgrid");
+  s += symbolTargets("guitar", [
+    ["pickupL",150,140], ["pickupR",250,140], ["pickupC",390,220,true],
+    ["pickupLossR",570,220,true], ["toneR",760,190,true], ["toneC",760,285,true],
+    ["volumeR",1000,220,true], ["cableCapPerM",1220,275,true],
+    ["ampInputR",1390,275,true], ["ampSeriesR",1500,220], ["ampInputC",1650,275,true]
+  ]);
   return s;
 }
 
@@ -388,6 +411,10 @@ function connectionCircuitSvg(model) {
   s+=text(1030,365,"Cable C")+text(1030,393,formatValue(totals.cableC,"F"));
   s+=label(1240,"Rin","loadR",365)+text(1310,110,"Vout");
   s+=label(760,"Cable length","cableLength",365)+text(760,440,"ケーブル合計値 = 長さ × 単位長定数");
+  s+=symbolTargets(model, [
+    ...(effect ? [["outputC",185,140],["sourceR",340,140],["pullDownR",510,220,true]] : [["sourceR",200,140]]),
+    ["cableResPerM",640,140],["cableIndPerM",830,140],["cableCapPerM",1030,220,true],["loadR",1240,220,true]
+  ]);
   return s;
 }
 
@@ -411,7 +438,10 @@ function css(name) { return getComputedStyle(document.documentElement).getProper
 function drawFrequencyPlot(canvas, current, baseline) {
   const { ctx, width: W, height: H } = canvasSetup(canvas);
   const margin = { l: W < 500 ? 52 : 62, r: 18, t: 16, b: 48 };
-  const ymin = -36, ymax = 8;
+  // Keep extreme-value experiments visible instead of pinning curves to the old floor.
+  const values = [...current, ...baseline].filter(Number.isFinite);
+  const ymin = Math.min(-36, Math.floor(Math.min(...values) / 12) * 12);
+  const ymax = Math.max(8, Math.ceil(Math.max(...values) / 12) * 12);
   const x = (f) => margin.l + Math.log10(f / 20) / 3 * (W - margin.l - margin.r);
   const y = (dbv) => margin.t + (ymax - dbv) / (ymax - ymin) * (H - margin.t - margin.b);
   ctx.clearRect(0, 0, W, H);
@@ -419,7 +449,10 @@ function drawFrequencyPlot(canvas, current, baseline) {
   ctx.lineWidth = 1;
   ctx.strokeStyle = css("--grid");
   ctx.fillStyle = css("--muted");
-  [-30, -20, -10, 0].forEach((tick) => {
+  const tickStep = Math.max(10, Math.ceil((ymax - ymin) / 60) * 10);
+  const yTicks = [];
+  for (let tick = Math.ceil(ymin / tickStep) * tickStep; tick <= ymax; tick += tickStep) yTicks.push(tick);
+  yTicks.forEach((tick) => {
     const yy = y(tick); ctx.beginPath(); ctx.moveTo(margin.l, yy); ctx.lineTo(W - margin.r, yy); ctx.stroke();
     ctx.textAlign = "right"; ctx.textBaseline = "middle"; ctx.fillText(`${tick}`, margin.l - 8, yy);
   });
@@ -595,7 +628,7 @@ let dialogTarget = null;
 function attachCircuitInteraction(model) {
   const svg = $(modelConfigs[model].circuit);
   svg.addEventListener("pointerdown", (event) => {
-    const target = event.target.closest?.(".interactive-value");
+    const target = event.target.closest?.(".interactive-value, .interactive-symbol");
     if (!target || target.dataset.model !== model) return;
     event.preventDefault();
     const key = target.dataset.key;
@@ -621,7 +654,7 @@ function attachCircuitInteraction(model) {
   svg.addEventListener("pointerup", finishPointer);
   svg.addEventListener("pointercancel", finishPointer);
   svg.addEventListener("keydown", (event) => {
-    const target = event.target.closest?.(".interactive-value");
+    const target = event.target.closest?.(".interactive-value, .interactive-symbol");
     if (!target || target.dataset.model !== model) return;
     const key = target.dataset.key;
     const def = defFor(model, key);
@@ -638,7 +671,8 @@ function attachCircuitInteraction(model) {
       ? def.values[clamp(nearestPreferredIndex(def, current) + direction, 0, def.values.length - 1)]
       : usesLogDrag(def) ? current * Math.pow(10, direction / (event.shiftKey ? 60 : 12)) : current + direction * def.step * (event.shiftKey ? 0.2 : 1);
     setModelValue(model, key, value, !event.shiftKey);
-    requestAnimationFrame(() => document.querySelector(`.interactive-value[data-model="${model}"][data-key="${key}"]`)?.focus());
+    const targetClass = target.classList.contains("interactive-symbol") ? "interactive-symbol" : "interactive-value";
+    requestAnimationFrame(() => document.querySelector(`.${targetClass}[data-model="${model}"][data-key="${key}"]`)?.focus({ preventScroll: true }));
   });
 }
 

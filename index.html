@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="ギター、エフェクター出力、オーディオ配線の周波数特性を回路図とともに学べるブラウザシミュレータ">
   <title>Audio Impedance Lab</title>
-  <link rel="stylesheet" href="styles.css?v=20260920-cout5">
+  <link rel="stylesheet" href="styles.css?v=20260920-touch6">
 </head>
 <body>
   <header class="site-header">
@@ -167,6 +167,9 @@
     </section>
 
     <section class="assumptions">
+      <h2>操作と実験範囲</h2>
+      <p>数値または抵抗・コイル・コンデンサのシンボルを上下ドラッグすると値が変わります。タップすると数値入力できます。シンボル以外の余白では通常のスクロールができます。Volume／Toneの抵抗シンボルは総抵抗値を変更し、ノブ位置は「knob」の数値から変更します。ケーブルのシンボルは単位長あたりのR・L・Cを変更します。</p>
+      <p>ケーブル以外は、抵抗1 Ω〜100 MΩ（Grid stopperのみ0 Ωも可）、Lは1 µH〜100 H、Cは1 pF〜1,000 µFまで変更できます。E24系列を基本とし、従来の用途固有値も維持しています。極端な値は実機としての妥当性や部品の入手性を保証しない、理想化モデル上の実験用です。グラフの縦軸は現在値と初期値に合わせて自動調整します。</p>
       <h2>モデルの前提</h2>
       <p>受動・線形・集中定数モデルです。ピックアップは R–L と自己容量・損失抵抗、Volumeは10%オーディオテーパー相当の3端子ポット、Toneも同じテーパーの可変抵抗として近似します。アンプ入力容量はMiller効果を含む実効値です。エフェクター出力は理想信号源にCout、Cout後の直列Rout、出力対地抵抗を加えた小信号モデルで、能動回路の歪みや電源依存性は含みません。絶対的な「音色」ではなく電気負荷による変化の比較に向きます。</p>
     </section>
@@ -185,6 +188,6 @@
       <div class="dialog-actions"><button class="quiet-button" value="cancel" type="button" id="valueCancel">キャンセル</button><button class="quiet-button primary-button" value="default" type="submit">適用</button></div>
     </form>
   </dialog>
-  <script src="app.js?v=20260920-cout5"></script>
+  <script src="app.js?v=20260920-touch6"></script>
 </body>
 </html>

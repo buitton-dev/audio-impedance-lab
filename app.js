@@ -55,7 +55,7 @@ const guitarDefs = [
   preferredDef({ key: "toneR", label: "Tone pot value", unit: "Ω", min: 100000, max: 1000000, step: 10000 }, [250000, 500000]),
   { key: "tonePosition", label: "Tone knob", unit: "knob", min: 0, max: 10, step: 0.1 },
   preferredDef({ key: "toneC", label: "Tone capacitor", unit: "F", min: 10e-9, max: 100e-9, step: 1e-9 }, [22e-9, 47e-9]),
-  { key: "cableLength", label: "Cable length", unit: "m", min: 0.5, max: 20, step: 0.5 },
+  { key: "cableLength", label: "Cable length", unit: "m", min: 0.5, max: 100, step: 0.5 },
   preferredDef({ key: "cableCapPerM", label: "Cable capacitance", unit: "F/m", min: 50e-12, max: 200e-12, step: 5e-12 }, [70e-12, 100e-12, 160e-12]),
   preferredDef({ key: "ampInputR", label: "Amp input R", unit: "Ω", min: 50000, max: 2000000, step: 10000 }, [1e6]),
   preferredDef({ key: "ampSeriesR", label: "Grid stopper R", unit: "Ω", min: 0, max: 100000, step: 1000 }, [0, 22000, 34000, 68000]),
@@ -65,7 +65,7 @@ const guitarDefs = [
 const lineDefs = [
   preferredDef({ key: "sourceR", label: "Source Rout", unit: "Ω", min: 10, max: 200000, step: 10 }, [100, 10000, 100000]),
   preferredDef({ key: "loadR", label: "Load Rin", unit: "Ω", min: 100, max: 2000000, step: 100 }, [10000, 100000, 1e6]),
-  { key: "cableLength", label: "Cable length", unit: "m", min: 0.5, max: 20, step: 0.5 },
+  { key: "cableLength", label: "Cable length", unit: "m", min: 0.5, max: 100, step: 0.5 },
   preferredDef({ key: "cableResPerM", label: "Cable R / m", unit: "Ω/m", min: 0, max: 1, step: 0.01 }, [0, 0.04, 0.043, 0.1]),
   preferredDef({ key: "cableIndPerM", label: "Cable L / m", unit: "H/m", min: 0, max: 2e-6, step: 0.05e-6 }, [0, 0.5e-6]),
   preferredDef({ key: "cableCapPerM", label: "Cable C / m", unit: "F/m", min: 50e-12, max: 200e-12, step: 5e-12 }, [70e-12, 100e-12, 160e-12])
@@ -76,7 +76,7 @@ const effectorDefs = [
   preferredDef({ key: "outputC", label: "Output coupling Cout", unit: "F", min: 10e-9, max: 10e-6, step: 10e-9 }, [100e-9, 1e-6]),
   preferredDef({ key: "pullDownR", label: "Output pull-down R", unit: "Ω", min: 10000, max: 2000000, step: 1000 }, [100000, 1e6]),
   preferredDef({ key: "loadR", label: "Next input Rin", unit: "Ω", min: 10000, max: 2000000, step: 1000 }, [10000, 1e6]),
-  { key: "cableLength", label: "Cable length", unit: "m", min: 0.5, max: 20, step: 0.5 },
+  { key: "cableLength", label: "Cable length", unit: "m", min: 0.5, max: 100, step: 0.5 },
   preferredDef({ key: "cableResPerM", label: "Cable R / m", unit: "Ω/m", min: 0, max: 1, step: 0.01 }, [0, 0.04, 0.043, 0.1]),
   preferredDef({ key: "cableIndPerM", label: "Cable L / m", unit: "H/m", min: 0, max: 2e-6, step: 0.05e-6 }, [0, 0.5e-6]),
   preferredDef({ key: "cableCapPerM", label: "Cable C / m", unit: "F/m", min: 50e-12, max: 200e-12, step: 5e-12 }, [70e-12, 100e-12, 160e-12])

@@ -282,55 +282,82 @@ function interactiveValue(model, key, text, x, y, label) {
   return `<text class="value interactive-value" x="${x}" y="${y}" data-model="${model}" data-key="${key}" role="button" tabindex="0" aria-label="${label} ${text}。上下ドラッグまたは矢印キーで変更。クリックで数値入力">${text} ↕</text>`;
 }
 
+// Circuit geometry and labels occupy separate lanes. All returns share the lower rail.
+function circuitLayout(model, width) {
+  const config = modelConfigs[model];
+  $(config.circuit).setAttribute("viewBox", `0 0 ${width} 480`);
+  $(config.circuit).style.minWidth = `${width * 0.75}px`;
+  $(config.circuit).parentElement.style.overflowX = "auto";
+  const wire = (path) => `<path class="wire" d="${path}"/>`;
+  const node = (x,y=140) => `<circle class="node" cx="${x}" cy="${y}" r="4"/>`;
+  const text = (x,y,value) => `<text x="${x}" y="${y}" text-anchor="middle">${value}</text>`;
+  const value = (key,x,y) => {
+    const def = config.defs.find(d => d.key === key);
+    return `<g text-anchor="middle">${interactiveValue(model,key,formatValue(config.state[key],def.unit),x,y,def.label)}</g>`;
+  };
+  const label = (x,name,key,y=65) => text(x,y,name)+value(key,x,y+28);
+  const resistor = (x,y,vertical=false) => `<g class="component"><path transform="translate(${x} ${y})${vertical ? ' rotate(90)' : ''}" d="M-40 0h10l5 -10 10 20 10 -20 10 20 10 -20 5 10h10"/></g>`;
+  const capacitor = (x,y,vertical=false) => `<g class="component"><path transform="translate(${x} ${y})${vertical ? ' rotate(90)' : ''}" d="M-40 0h33m0 -18v36m14 -36v36m0 -18h33"/></g>`;
+  const source = wire("M75 140V203M75 247V320")+
+    '<g class="component"><circle cx="75" cy="225" r="22"/><path d="M59 225q8 -15 16 0q8 15 16 0"/></g>'+
+    text(75,365,model==="guitar"?"内部起電力":"信号源");
+  const ground = wire(`M75 320H${width-60}M75 320v18m-16 0h32m-26 7h20m-14 7h8`);
+  return {wire,node,text,value,label,resistor,capacitor,source,ground};
+}
+
 function guitarCircuitSvg() {
-  const v = (key, unit) => formatValue(guitar[key], unit);
-  const cableC = guitar.cableLength * guitar.cableCapPerM;
-  return `
-  <g class="group-label"><text x="55" y="28">PICKUP</text><text x="515" y="28">GUITAR CONTROLS</text><text x="755" y="28">CABLE</text><text x="900" y="28">AMPLIFIER INPUT</text></g>
-  <g class="wire"><line x1="45" y1="105" x2="90" y2="105"/><line x1="45" y1="105" x2="45" y2="300"/><line x1="45" y1="300" x2="1130" y2="300"/><line x1="180" y1="105" x2="215" y2="105"/><line x1="300" y1="105" x2="665" y2="105"/><line x1="665" y1="105" x2="665" y2="180"/><line x1="690" y1="180" x2="930" y2="180"/></g>
-  <g class="component pickup-component"><circle cx="90" cy="202" r="23"/><path d="M73 202 q8 -16 17 0 q8 16 17 0"/><path d="M90 105 q9 -26 18 0 q9 26 18 0 q9 -26 18 0 q9 26 18 0 q9 -26 18 0"/><path d="M215 105 l11 -15 13 30 13 -30 13 30 13 -30 22 15"/></g>
-  <g class="wire"><line x1="90" y1="105" x2="90" y2="179"/><line x1="90" y1="225" x2="90" y2="300"/><line x1="355" y1="105" x2="355" y2="150"/><line x1="355" y1="165" x2="355" y2="300"/><line x1="435" y1="105" x2="435" y2="133"/><line x1="435" y1="210" x2="435" y2="300"/><line x1="535" y1="105" x2="535" y2="132"/><line x1="535" y1="210" x2="535" y2="232"/><line x1="535" y1="247" x2="535" y2="300"/></g>
-  <g class="component pickup-component"><path d="M338 150 h34 m-34 15 h34"/><path d="M435 133 l-12 10 24 13 -24 13 24 13 -24 13 12 15"/></g>
-  <g class="component control-component"><path d="M535 132 l-12 10 24 13 -24 13 24 13 -24 13 12 16"/><path d="M518 232 h34 m-34 15 h34"/><path d="M665 105 l-12 12 24 16 -24 16 24 16 -12 15"/><path d="M690 180 l-27 18 m0 0 8 -17 m-8 17 18 -2"/></g>
-  <g class="wire"><line x1="665" y1="210" x2="665" y2="300"/><line x1="790" y1="180" x2="790" y2="220"/><line x1="790" y1="235" x2="790" y2="300"/><line x1="885" y1="180" x2="885" y2="205"/><line x1="885" y1="280" x2="885" y2="300"/><line x1="1030" y1="180" x2="1065" y2="180"/><line x1="1065" y1="180" x2="1065" y2="220"/><line x1="1065" y1="235" x2="1065" y2="300"/></g>
-  <g class="component control-component"><path d="M665 180 l-12 10 24 10 -12 10"/></g><g class="component cable-component"><path d="M773 220 h34 m-34 15 h34"/></g><g class="component amp-component"><path d="M885 205 l-12 10 24 13 -24 13 24 13 -12 16"/><path d="M930 180 l10 -14 13 28 13 -28 13 28 13 -28 38 14"/><path d="M1048 220 h34 m-34 15 h34"/></g>
-  <g class="node"><circle cx="300" cy="105" r="5"/><circle cx="690" cy="180" r="5"/><circle cx="885" cy="180" r="5"/><circle cx="1065" cy="180" r="5"/></g>
-  <g><text x="52" y="335">internal EMF</text><text x="115" y="66">L<tspan font-size="11" dy="3">p</tspan></text>${interactiveValue("guitar", "pickupL", v("pickupL", "H"), 105, 90, "Pickup inductance")}<text x="230" y="66">DCR</text>${interactiveValue("guitar", "pickupR", v("pickupR", "Ω"), 220, 89, "Pickup DCR")}<text x="315" y="202">C<tspan font-size="11" dy="3">p</tspan></text>${interactiveValue("guitar", "pickupC", v("pickupC", "F"), 315, 226, "Pickup self capacitance")}<text x="382" y="235">R<tspan font-size="11" dy="3">damp(eq)</tspan></text>${interactiveValue("guitar", "pickupLossR", v("pickupLossR", "Ω"), 392, 261, "Resonance damping resistance")}<text x="477" y="218">Tone pot</text>${interactiveValue("guitar", "toneR", v("toneR", "Ω"), 477, 240, "Tone pot value")}${interactiveValue("guitar", "tonePosition", v("tonePosition", "knob"), 477, 263, "Tone knob")}${interactiveValue("guitar", "toneC", v("toneC", "F"), 557, 286, "Tone capacitor")}<text x="595" y="225">Volume pot</text>${interactiveValue("guitar", "volumeR", v("volumeR", "Ω"), 602, 248, "Volume pot value")}${interactiveValue("guitar", "volumePosition", v("volumePosition", "knob"), 602, 272, "Volume knob")}<text x="730" y="212">Cable</text>${interactiveValue("guitar", "cableLength", v("cableLength", "m"), 730, 238, "Cable length")}<text class="derived-value" x="730" y="264">Total C ${formatValue(cableC, "F")}</text><text x="845" y="238">R<tspan font-size="11" dy="3">in</tspan></text>${interactiveValue("guitar", "ampInputR", v("ampInputR", "Ω"), 838, 264, "Amplifier input resistance")}<text x="944" y="143">Grid stopper</text>${interactiveValue("guitar", "ampSeriesR", v("ampSeriesR", "Ω"), 945, 166, "Grid stopper resistance")}<text x="1085" y="224">C<tspan font-size="11" dy="3">in</tspan></text>${interactiveValue("guitar", "ampInputC", v("ampInputC", "F"), 1085, 250, "Effective input capacitance")}<text x="1080" y="166">V<tspan font-size="11" dy="3">grid</tspan></text></g>`;
+  const {wire,node,text,value,label,resistor,capacitor,source,ground} = circuitLayout("guitar",1800);
+  let s = source+ground;
+  s += wire("M75 140H110M190 140H210M290 140H960M1040 220H1460M1540 220H1700");
+  s += '<g class="component"><path d="'+horizontalInductorPath(110,190,140,4)+'"/></g>';
+  s += resistor(250,140)+label(150,"Pickup L","pickupL")+label(250,"DCR","pickupR");
+  // Pickup self capacitance and damping resistance.
+  s += wire("M390 140V180M390 260V320M570 140V180M570 260V320");
+  s += capacitor(390,220,true)+resistor(570,220,true)+node(390)+node(570);
+  s += label(390,"Pickup C","pickupC",365)+label(570,"減衰抵抗（等価）","pickupLossR",365);
+  // Tone resistor and capacitor form one series shunt branch.
+  s += wire("M760 140V150M760 230V245M760 325V320");
+  s += resistor(760,190,true)+capacitor(760,285,true)+node(760);
+  s += label(760,"Tone pot","toneR",365)+text(760,420,"Tone knob")+value("tonePosition",760,446);
+  s += label(930,"Tone C","toneC",365);
+  // Three-terminal volume pot with a wiper, not a short through the pot.
+  s += wire("M960 140H1000V180M1000 260V320M1040 220H1010");
+  s += resistor(1000,220,true)+wire("M1010 220l12 -7m-12 7l12 7");
+  s += label(1110,"Volume pot","volumeR",365)+text(1110,420,"Volume knob")+value("volumePosition",1110,446);
+  s += wire("M1220 220V235M1220 315V320M1390 220V235M1390 315V320M1650 220V235M1650 315V320");
+  s += capacitor(1220,275,true)+resistor(1390,275,true)+capacitor(1650,275,true);
+  s += node(1220,220)+node(1390,220)+node(1650,220)+resistor(1500,220);
+  s += label(1280,"Cable length","cableLength",365)+text(1280,425,"合計C "+formatValue(guitar.cableLength*guitar.cableCapPerM,"F"));
+  s += label(1450,"Amp Rin","ampInputR",365)+label(1500,"Grid stopper","ampSeriesR",150);
+  s += label(1650,"実効入力C","ampInputC",365)+text(1710,195,"Vgrid");
+  return s;
 }
 
-function lineCircuitSvg() {
-  const v = (key, unit) => formatValue(line[key], unit);
-  const totals = lineTotals(line);
-  const maxCableL = 20 * 2e-6;
-  const coilTurns = totals.cableL <= 0 ? 0 : Math.round(3 + 6 * Math.log10(1 + totals.cableL / 0.5e-6) / Math.log10(1 + maxCableL / 0.5e-6));
-  const coilPath = horizontalInductorPath(415, 515, 120, coilTurns);
-  return `
-  <g class="group-label"><text x="55" y="30">SOURCE</text><text x="310" y="30">CABLE</text><text x="760" y="30">LOAD</text></g>
-  <g class="wire"><line x1="55" y1="120" x2="100" y2="120"/><line x1="100" y1="222" x2="900" y2="222"/><line x1="55" y1="120" x2="55" y2="222"/><line x1="100" y1="120" x2="135" y2="120"/><line x1="225" y1="120" x2="280" y2="120"/><line x1="370" y1="120" x2="415" y2="120"/><line x1="515" y1="120" x2="850" y2="120"/></g>
-  <g class="component pickup-component"><circle cx="100" cy="171" r="22"/><path d="M84 171 q8 -15 16 0 q8 15 16 0"/><path d="M135 120 l11 -15 13 30 13 -30 13 30 13 -30 27 15"/></g>
-  <g class="wire"><line x1="100" y1="120" x2="100" y2="149"/><line x1="100" y1="193" x2="100" y2="222"/></g>
-  <g class="component cable-component"><path d="M280 120 l11 -15 13 30 13 -30 13 30 13 -30 27 15"/><path d="${coilPath}"/><path d="M650 120 v35 m-17 0 h34 m-34 13 h34 m-17 0 v54"/></g><g class="component amp-component"><path d="M850 120 v24 l-13 9 26 13 -26 13 26 13 -13 9 v21"/></g>
-  <g class="node"><circle cx="650" cy="120" r="5"/><circle cx="850" cy="120" r="5"/></g>
-  <g><text x="65" y="260">V<tspan font-size="11" dy="3">source</tspan></text><text x="156" y="78">R<tspan font-size="11" dy="3">out</tspan></text>${interactiveValue("line", "sourceR", v("sourceR", "Ω"), 150, 103, "Source output resistance")}<text x="300" y="78">R<tspan font-size="11" dy="3">cable</tspan></text><text class="derived-value" x="298" y="103">${formatValue(totals.cableR, "Ω")}</text><text x="448" y="71">L<tspan font-size="11" dy="3">cable</tspan></text><text class="derived-value" x="438" y="96">${formatValue(totals.cableL, "H")}</text><text class="derived-value" x="438" y="160">表示 ${coilTurns} loops</text><text x="675" y="157">C<tspan font-size="11" dy="3">cable</tspan></text><text class="derived-value" x="675" y="183">${formatValue(totals.cableC, "F")}</text><text x="870" y="154">R<tspan font-size="11" dy="3">in</tspan></text>${interactiveValue("line", "loadR", v("loadR", "Ω"), 870, 180, "Load input resistance")}<text x="875" y="104">V<tspan font-size="11" dy="3">out</tspan></text><text x="330" y="245">Cable length</text>${interactiveValue("line", "cableLength", v("cableLength", "m"), 435, 245, "Cable length")}<text class="derived-value" x="330" y="270">合計値は長さ × 単位長定数</text></g>`;
+function connectionCircuitSvg(model) {
+  const effect = model === "effector";
+  const state = modelConfigs[model].state;
+  const totals = lineTotals(state);
+  const {wire,node,text,value,label,resistor,capacitor,source,ground} = circuitLayout(model,1400);
+  const turns = totals.cableL <= 0 ? 0 : Math.round(3+6*Math.log10(1+totals.cableL/0.5e-6)/Math.log10(81));
+  let s=source+ground+wire("M75 140H160M240 140H330")+resistor(200,140)+label(200,"Rout","sourceR");
+  if(effect) {
+    s+=capacitor(370,140)+wire("M410 140H600M510 140V180M510 260V320");
+    s+=resistor(510,220,true)+node(510)+label(370,"Cout","outputC")+label(510,"Rpull-down","pullDownR",365);
+  } else s+=wire("M330 140H600");
+  s+=resistor(640,140)+wire("M680 140H780M880 140H1310");
+  s+='<g class="component"><path d="'+horizontalInductorPath(780,880,140,turns)+'"/></g>';
+  s+=text(640,65,"Cable R")+text(640,93,formatValue(totals.cableR,"Ω"));
+  s+=text(830,65,"Cable L")+text(830,93,formatValue(totals.cableL,"H"));
+  s+=wire("M1030 140V180M1030 260V320M1240 140V180M1240 260V320");
+  s+=capacitor(1030,220,true)+resistor(1240,220,true)+node(1030)+node(1240);
+  s+=text(1030,365,"Cable C")+text(1030,393,formatValue(totals.cableC,"F"));
+  s+=label(1240,"Rin","loadR",365)+text(1310,110,"Vout");
+  s+=label(760,"Cable length","cableLength",365)+text(760,440,"ケーブル合計値 = 長さ × 単位長定数");
+  return s;
 }
 
-function effectorCircuitSvg() {
-  const v = (key, unit) => formatValue(effector[key], unit);
-  const totals = lineTotals(effector);
-  const maxCableL = 20 * 2e-6;
-  const coilTurns = totals.cableL <= 0 ? 0 : Math.round(3 + 6 * Math.log10(1 + totals.cableL / 0.5e-6) / Math.log10(1 + maxCableL / 0.5e-6));
-  const coilPath = horizontalInductorPath(650, 760, 105, coilTurns);
-  return `
-  <g class="group-label"><text x="45" y="28">EFFECTOR OUTPUT</text><text x="465" y="28">OUTPUT JACK</text><text x="620" y="28">CABLE</text><text x="970" y="28">NEXT INPUT</text></g>
-  <g class="wire"><line x1="45" y1="105" x2="92" y2="105"/><line x1="45" y1="105" x2="45" y2="260"/><line x1="45" y1="260" x2="1125" y2="260"/><line x1="92" y1="105" x2="135" y2="105"/><line x1="225" y1="105" x2="285" y2="105"/><line x1="300" y1="105" x2="510" y2="105"/><line x1="760" y1="105" x2="1070" y2="105"/></g>
-  <g class="component pickup-component"><circle cx="92" cy="182" r="22"/><path d="M76 182 q8 -15 16 0 q8 15 16 0"/><path d="M135 105 l11 -15 13 30 13 -30 13 30 13 -30 27 15"/></g>
-  <g class="wire"><line x1="92" y1="105" x2="92" y2="160"/><line x1="92" y1="204" x2="92" y2="260"/><line x1="510" y1="105" x2="510" y2="135"/><line x1="510" y1="220" x2="510" y2="260"/></g>
-  <g class="component control-component"><path d="M285 78v54M300 78v54"/><path d="M510 135 l-12 10 24 13 -24 13 24 13 -24 13 12 23"/></g>
-  <g class="component cable-component"><path d="M510 105 h35 l11 -15 13 30 13 -30 13 30 13 -30 25 15 h17"/><path d="${coilPath}"/><path d="M855 105 v42 m-17 0 h34 m-34 14 h34 m-17 0 v99"/></g>
-  <g class="component amp-component"><path d="M1020 105 v30 l-13 10 26 14 -26 14 26 14 -13 10 v63"/></g>
-  <g class="node"><circle cx="510" cy="105" r="5"/><circle cx="855" cy="105" r="5"/><circle cx="1020" cy="105" r="5"/></g>
-  <g><text x="50" y="292">internal signal</text><text x="155" y="63">R<tspan font-size="11" dy="3">out</tspan></text>${interactiveValue("effector", "sourceR", v("sourceR", "Ω"), 150, 87, "Effector output resistance")}<text x="270" y="51">C<tspan font-size="11" dy="3">out</tspan></text>${interactiveValue("effector", "outputC", v("outputC", "F"), 270, 87, "Output coupling capacitance")}<text x="445" y="163">R<tspan font-size="11" dy="3">pull-down</tspan></text>${interactiveValue("effector", "pullDownR", v("pullDownR", "Ω"), 437, 196, "Output pull-down resistance")}<text x="548" y="62">R<tspan font-size="11" dy="3">cable</tspan></text><text class="derived-value" x="542" y="143">${formatValue(totals.cableR, "Ω")}</text><text x="684" y="56">L<tspan font-size="11" dy="3">cable</tspan></text><text class="derived-value" x="675" y="82">${formatValue(totals.cableL, "H")} / ${coilTurns} loops</text><text x="878" y="146">C<tspan font-size="11" dy="3">cable</tspan></text><text class="derived-value" x="878" y="180">${formatValue(totals.cableC, "F")}</text><text x="1040" y="146">R<tspan font-size="11" dy="3">in</tspan></text>${interactiveValue("effector", "loadR", v("loadR", "Ω"), 1040, 180, "Next input resistance")}<text x="1040" y="89">V<tspan font-size="11" dy="3">out</tspan></text><text x="650" y="292">Cable length</text>${interactiveValue("effector", "cableLength", v("cableLength", "m"), 755, 292, "Cable length")}</g>`;
-}
+function lineCircuitSvg() { return connectionCircuitSvg("line"); }
+function effectorCircuitSvg() { return connectionCircuitSvg("effector"); }
 
 function canvasSetup(canvas) {
   const rect = canvas.getBoundingClientRect();

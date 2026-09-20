@@ -66,8 +66,8 @@ const lineDefs = [
 ];
 
 const effectorDefs = [
-  preferredDef({ key: "sourceR", label: "Output Rout", unit: "Ω", min: 10, max: 100000, step: 10 }, [1000, 10000, 100000]),
   preferredDef({ key: "outputC", label: "Output coupling Cout", unit: "F", min: 10e-9, max: 10e-6, step: 10e-9 }, [100e-9, 1e-6]),
+  preferredDef({ key: "sourceR", label: "Output Rout", unit: "Ω", min: 10, max: 100000, step: 10 }, [1000, 10000, 100000]),
   preferredDef({ key: "pullDownR", label: "Output pull-down R", unit: "Ω", min: 10000, max: 2000000, step: 1000 }, [100000, 1e6]),
   preferredDef({ key: "loadR", label: "Next input Rin", unit: "Ω", min: 10000, max: 2000000, step: 1000 }, [10000, 1e6]),
   { key: "cableLength", label: "Cable length", unit: "m", min: 0.5, max: 20, step: 0.5 },
@@ -367,11 +367,14 @@ function connectionCircuitSvg(model) {
   let s=equipmentFrame(12,570,effect ? "エフェクター本体" : "送り出す機器",effect ? "pedal" : "source","var(--warm)")+
     equipmentFrame(596,540,"ケーブル","cable","var(--stage-cable)")+
     equipmentFrame(1150,238,effect ? "次段機器" : "受ける機器","amp","var(--stage-amp)")+
-    source+ground+wire("M75 140H160M240 140H330")+resistor(200,140)+label(200,"Rout","sourceR");
+    source+ground;
   if(effect) {
-    s+=capacitor(370,140)+wire("M410 140H600M510 140V180M510 260V320");
-    s+=resistor(510,220,true)+node(510)+label(370,"Cout","outputC")+label(510,"Rpull-down","pullDownR",365);
-  } else s+=wire("M330 140H600");
+    s+=wire("M75 140H160")+capacitor(200,140)+wire("M240 140H330")+resistor(370,140);
+    s+=wire("M410 140H600M510 140V180M510 260V320");
+    s+=resistor(510,220,true)+node(510)+label(200,"Cout","outputC")+label(370,"Rout","sourceR")+label(510,"Rpull-down","pullDownR",365);
+  } else {
+    s+=wire("M75 140H160M240 140H600")+resistor(200,140)+label(200,"Rout","sourceR");
+  }
   s+=resistor(640,140)+wire("M680 140H780M880 140H1310");
   s+='<g class="component"><path d="'+horizontalInductorPath(780,880,140,turns)+'"/></g>';
   s+=text(640,65,"Cable R")+text(640,93,formatValue(totals.cableR,"Ω"));

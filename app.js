@@ -66,8 +66,8 @@ const lineDefs = [
 ];
 
 const effectorDefs = [
+  preferredDef({ key: "sourceR", label: "Output series Rout", unit: "Ω", min: 10, max: 100000, step: 10 }, [1000, 10000, 100000]),
   preferredDef({ key: "outputC", label: "Output coupling Cout", unit: "F", min: 10e-9, max: 10e-6, step: 10e-9 }, [100e-9, 1e-6]),
-  preferredDef({ key: "sourceR", label: "Output Rout", unit: "Ω", min: 10, max: 100000, step: 10 }, [1000, 10000, 100000]),
   preferredDef({ key: "pullDownR", label: "Output pull-down R", unit: "Ω", min: 10000, max: 2000000, step: 1000 }, [100000, 1e6]),
   preferredDef({ key: "loadR", label: "Next input Rin", unit: "Ω", min: 10000, max: 2000000, step: 1000 }, [10000, 1e6]),
   { key: "cableLength", label: "Cable length", unit: "m", min: 0.5, max: 20, step: 0.5 },
@@ -113,7 +113,7 @@ const effectorPresets = {
 };
 
 const effectorPresetNotes = {
-  buffered: "低いRout、1 µFのCout、100 kΩの出力対地抵抗から次段1 MΩを駆動する教材例です。",
+  buffered: "1 µFのCout後に低い直列Routを置き、100 kΩの出力対地抵抗から次段1 MΩを駆動する教材例です。",
   "small-cout": "Coutを100 nFにして、対地抵抗・次段入力抵抗との低域ハイパスを見やすくした例です。",
   "high-low": "高めのRoutと低いRinが同時に効く、負荷条件の厳しい比較例です。"
 };
@@ -263,7 +263,11 @@ function effectorTransfer(params, f) {
   const load = parallel(complex(params.loadR, 0), complex(0, -1 / (w * cable.cableC)));
   const cablePath = add(complex(cable.cableR, w * cable.cableL), load);
   const outputNodeLoad = parallel(complex(params.pullDownR, 0), cablePath);
-  const sourcePath = add(complex(params.sourceR, 0), complex(0, -1 / (w * params.outputC)));
+  const couplingC = complex(0, -1 / (w * params.outputC));
+  const outputSeriesR = complex(params.sourceR, 0);
+  // Topology: source -> Cout -> (future volume-pot node) -> series Rout -> output.
+  // With no shunt branch at the intermediate node, the two series impedances add commutatively.
+  const sourcePath = add(couplingC, outputSeriesR);
   const outputNodeV = div(outputNodeLoad, add(sourcePath, outputNodeLoad));
   return mul(outputNodeV, div(load, cablePath));
 }
@@ -369,9 +373,10 @@ function connectionCircuitSvg(model) {
     equipmentFrame(1150,238,effect ? "次段機器" : "受ける機器","amp","var(--stage-amp)")+
     source+ground;
   if(effect) {
-    s+=wire("M75 140H160")+capacitor(200,140)+wire("M240 140H330")+resistor(370,140);
-    s+=wire("M410 140H600M510 140V180M510 260V320");
-    s+=resistor(510,220,true)+node(510)+label(200,"Cout","outputC")+label(370,"Rout","sourceR")+label(510,"Rpull-down","pullDownR",365);
+    s+=wire("M75 140H145M225 140H300M380 140H600M510 140V180M510 260V320");
+    s+=capacitor(185,140)+resistor(340,140)+resistor(510,220,true)+node(510);
+    s+=label(185,"Cout","outputC")+label(340,"直列 Rout","sourceR")+label(510,"Rpull-down","pullDownR",365);
+    s+=text(262,185,"Volume pot追加候補点");
   } else {
     s+=wire("M75 140H160M240 140H600")+resistor(200,140)+label(200,"Rout","sourceR");
   }
@@ -483,7 +488,7 @@ function updateEffector() {
   const estimatedFc = 1 / (2 * Math.PI * effector.outputC * (effector.sourceR + effectiveLoadR));
   const midband = dB(magnitude(effectorTransfer(effector, 1000)));
   $("eSummary").textContent = `Cout低域fc概算 ${formatFrequency(estimatedFc)} / 1 kHz ${midband.toFixed(2)} dB`;
-  $("eExplain").textContent = `CoutはDCを遮断し、Rout＋（Rpull-down ∥ 次段Rin）との組み合わせで低域を減衰させます。概算fcは${formatFrequency(estimatedFc)}です。高域側は主にRoutとケーブル合計C ${formatValue(totals.cableC, "F")}の組み合わせで変化します。`;
+  $("eExplain").textContent = `CoutはDCを遮断し、その後に置く直列Rout＋（Rpull-down ∥ 次段Rin）との組み合わせで低域を減衰させます。概算fcは${formatFrequency(estimatedFc)}です。高域側は主にRoutとケーブル合計C ${formatValue(totals.cableC, "F")}の組み合わせで変化します。`;
 }
 
 function formatFrequency(value) {

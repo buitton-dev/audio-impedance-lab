@@ -486,6 +486,7 @@ function peakInfo(values) {
 }
 
 function updateGuitar() {
+  refreshMobileControls("guitar");
   $("gCircuit").innerHTML = guitarCircuitSvg();
   const current = frequencies.map((f) => dB(magnitude(guitarTransfer(guitar, f))));
   const base = frequencies.map((f) => dB(magnitude(guitarTransfer(guitarBaseline, f))));
@@ -498,6 +499,7 @@ function updateGuitar() {
 }
 
 function updateLine() {
+  refreshMobileControls("line");
   $("lCircuit").innerHTML = lineCircuitSvg();
   const current = frequencies.map((f) => dB(magnitude(lineTransfer(line, f))));
   const base = frequencies.map((f) => dB(magnitude(lineTransfer(lineBaseline, f))));
@@ -511,6 +513,7 @@ function updateLine() {
 }
 
 function updateEffector() {
+  refreshMobileControls("effector");
   $("eCircuit").innerHTML = effectorCircuitSvg();
   const current = frequencies.map((f) => dB(magnitude(effectorTransfer(effector, f))));
   const base = frequencies.map((f) => dB(magnitude(effectorTransfer(effectorBaseline, f))));
@@ -602,6 +605,9 @@ function setModelValue(model, key, value, round = true) {
   const def = defFor(model, key);
   if (!config || !def || !Number.isFinite(value)) return;
   config.state[key] = def.values ? roundedToStep(value, def) : round ? roundedToStep(value, def) : clamp(value, def.min, def.max);
+  if (["cableResPerM", "cableIndPerM", "cableCapPerM"].includes(key)) {
+    $(`${model === "guitar" ? "g" : model === "line" ? "l" : "e"}CablePreset`).value = "custom";
+  }
   refreshControls($(config.controls), config.defs, config.state);
   config.update();
 }
@@ -625,11 +631,12 @@ function draggedValue(def, startValue, deltaY, fine) {
 let dragSession = null;
 let dialogTarget = null;
 
-function attachCircuitInteraction(model) {
-  const svg = $(modelConfigs[model].circuit);
+function attachCircuitInteraction(model, host = null) {
+  const svg = host || $(modelConfigs[model].circuit);
   svg.addEventListener("pointerdown", (event) => {
     const target = event.target.closest?.(".interactive-value, .interactive-symbol");
     if (!target || target.dataset.model !== model) return;
+    if (dragSession || (event.button !== undefined && event.button !== 0)) return;
     event.preventDefault();
     const key = target.dataset.key;
     dragSession = { model, key, pointerId: event.pointerId, startY: event.clientY, startValue: modelConfigs[model].state[key], moved: false };
@@ -653,6 +660,7 @@ function attachCircuitInteraction(model) {
   };
   svg.addEventListener("pointerup", finishPointer);
   svg.addEventListener("pointercancel", finishPointer);
+  svg.addEventListener("lostpointercapture", finishPointer);
   svg.addEventListener("keydown", (event) => {
     const target = event.target.closest?.(".interactive-value, .interactive-symbol");
     if (!target || target.dataset.model !== model) return;
@@ -672,7 +680,7 @@ function attachCircuitInteraction(model) {
       : usesLogDrag(def) ? current * Math.pow(10, direction / (event.shiftKey ? 60 : 12)) : current + direction * def.step * (event.shiftKey ? 0.2 : 1);
     setModelValue(model, key, value, !event.shiftKey);
     const targetClass = target.classList.contains("interactive-symbol") ? "interactive-symbol" : "interactive-value";
-    requestAnimationFrame(() => document.querySelector(`.${targetClass}[data-model="${model}"][data-key="${key}"]`)?.focus({ preventScroll: true }));
+    requestAnimationFrame(() => svg.querySelector(`.${targetClass}[data-model="${model}"][data-key="${key}"]`)?.focus({ preventScroll: true }));
   });
 }
 
@@ -736,6 +744,76 @@ function switchTab(tab) {
   requestAnimationFrame(() => { if (tab === "guitar") updateGuitar(); if (tab === "line") updateLine(); if (tab === "effector") updateEffector(); });
 }
 
+const mobileGroups = {
+  guitar: [["Pickup", ["pickupR","pickupL","pickupC","pickupLossR"]], ["Volume / Tone", ["volumeR","volumePosition","toneR","tonePosition","toneC"]], ["ケーブル", ["cableLength","cableCapPerM"]], ["アンプ", ["ampInputR","ampSeriesR","ampInputC"]]],
+  line: [["接続機器", ["sourceR","loadR"]], ["ケーブル", ["cableLength","cableResPerM","cableIndPerM","cableCapPerM"]]],
+  effector: [["出力回路", ["outputC","sourceR","pullDownR","loadR"]], ["ケーブル", ["cableLength","cableResPerM","cableIndPerM","cableCapPerM"]]]
+};
+
+function mobileSymbol(def) {
+  const path = def.unit === "Ω" || def.unit === "Ω/m" ? "M4 24h8l4 -9 7 18 7 -18 7 18 4 -9h11"
+    : def.unit === "F" || def.unit === "F/m" ? "M4 24h18m0 -14v28m12 -28v28m0 -14h18"
+    : def.unit === "H" || def.unit === "H/m" ? "M4 24h4q5 -20 10 0q5 -20 10 0q5 -20 10 0h14"
+    : def.unit === "knob" ? "M28 6a18 18 0 1 0 0 36a18 18 0 1 0 0 -36M28 24l9 -12"
+    : "M4 14h48M4 34h48M10 10v28M46 10v28";
+  return `<svg viewBox="0 0 56 48" aria-hidden="true"><path d="${path}"/></svg>`;
+}
+
+function refreshMobileControls(model) {
+  const host = $(`mobile-${model}`);
+  if (!host) return;
+  const config = modelConfigs[model];
+  host.querySelectorAll("[data-mobile-value]").forEach(out => {
+    const key = out.dataset.mobileValue, def = defFor(model,key);
+    out.textContent = formatValue(config.state[key], def.unit);
+    out.closest("button").setAttribute("aria-label", `${def.label}: ${out.textContent}。タップで入力、上下ドラッグで変更`);
+  });
+  host.querySelectorAll("[data-step]").forEach(button => {
+    const def = defFor(model,button.dataset.key), value = config.state[def.key];
+    button.disabled = Number(button.dataset.step) < 0 ? value <= def.min : value >= def.max;
+  });
+}
+
+function buildMobileControls(model) {
+  const config = modelConfigs[model], circuit = $(config.circuit);
+  const panel = circuit.closest("article"), visuals = panel.parentElement;
+  panel.classList.add("full-circuit-panel");
+  panel.id = `full-circuit-${model}`;
+  const toggle = document.createElement("button");
+  toggle.type = "button"; toggle.className = "quiet-button mobile-only circuit-toggle";
+  toggle.textContent = "全体回路図を開く";
+  toggle.setAttribute("aria-expanded","false"); toggle.setAttribute("aria-controls",panel.id);
+  toggle.addEventListener("click", () => {
+    const open = panel.classList.toggle("mobile-circuit-open");
+    toggle.setAttribute("aria-expanded",String(open)); toggle.textContent = open ? "全体回路図を閉じる" : "全体回路図を開く";
+  });
+  visuals.append(toggle);
+  const host = document.createElement("section");
+  host.id = `mobile-${model}`; host.className = "panel mobile-only mobile-editor";
+  host.setAttribute("aria-label","スマホ用部品操作");
+  host.innerHTML = `<h2>部品を操作</h2><p class="mobile-hint">±で1段階、中央をタップで入力。記号・値の上下ドラッグもできます。</p><label for="mobile-group-${model}">操作する場所</label><select id="mobile-group-${model}">${mobileGroups[model].map(([name],i)=>`<option value="${i}">${name}</option>`).join("")}</select>`;
+  const rows = document.createElement("div"); rows.className = "mobile-rows"; host.append(rows);
+  const render = () => {
+    const keys = mobileGroups[model][Number(host.querySelector("select").value)][1];
+    rows.innerHTML = keys.map(key => {
+      const def = defFor(model,key);
+      return `<div class="mobile-component"><div class="mobile-component-name">${def.label}</div><div class="mobile-component-actions"><button type="button" data-step="-1" data-key="${key}" aria-label="${def.label}を減らす">−</button><button type="button" class="interactive-symbol mobile-value" data-model="${model}" data-key="${key}">${mobileSymbol(def)}<span data-mobile-value="${key}"></span></button><button type="button" data-step="1" data-key="${key}" aria-label="${def.label}を増やす">＋</button></div></div>`;
+    }).join("");
+    refreshMobileControls(model);
+  };
+  host.querySelector("select").addEventListener("change",render);
+  host.addEventListener("click", event => {
+    const button = event.target.closest("[data-step]");
+    if (!button) return;
+    const def = defFor(model,button.dataset.key), direction = Number(button.dataset.step), current = config.state[def.key];
+    const next = def.values ? def.values[clamp(nearestPreferredIndex(def,current)+direction,0,def.values.length-1)] : current+direction*def.step;
+    setModelValue(model,def.key,next);
+  });
+  visuals.append(host); render(); attachCircuitInteraction(model,host);
+}
+
+["guitar", "line", "effector"].forEach(buildMobileControls);
+
 createControls($("gControls"), guitarDefs, guitar, (key) => {
   if (key === "cableCapPerM") $("gCablePreset").value = "custom";
   updateGuitar();
@@ -748,7 +826,7 @@ createControls($("eControls"), effectorDefs, effector, (key) => {
   if (["cableResPerM", "cableIndPerM", "cableCapPerM"].includes(key)) $("eCablePreset").value = "custom";
   updateEffector();
 });
-["guitar", "line", "effector"].forEach(attachCircuitInteraction);
+["guitar", "line", "effector"].forEach(model => attachCircuitInteraction(model));
 $("gPreset").addEventListener("change", (e) => applyGuitarPreset(e.target.value));
 $("lPreset").addEventListener("change", (e) => applyLinePreset(e.target.value));
 $("ePreset").addEventListener("change", (e) => applyEffectorPreset(e.target.value));

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="ギター、エフェクター出力、オーディオ配線の周波数特性を回路図とともに学べるブラウザシミュレータ">
   <title>Audio Impedance Lab</title>
-  <link rel="stylesheet" href="styles.css?v=20260920-touch6">
+  <link rel="stylesheet" href="styles.css?v=20260921-mobile">
 </head>
 <body>
   <header class="site-header">
@@ -168,6 +168,7 @@
 
     <section class="assumptions">
       <h2>操作と実験範囲</h2>
+      <p>画面幅700 px以下ではスマホ専用表示になります。「部品を操作」で場所を選び、＋／−で1段階ずつ変更、中央の記号・値をタップすると数値入力できます。上下ドラッグも使えます。全体回路図は開閉できます。PCでは回路図の直接操作と「詳細設定」を使用します。</p>
       <p>数値または抵抗・コイル・コンデンサのシンボルを上下ドラッグすると値が変わります。タップすると数値入力できます。シンボル以外の余白では通常のスクロールができます。Volume／Toneの抵抗シンボルは総抵抗値を変更し、ノブ位置は「knob」の数値から変更します。ケーブルのシンボルは単位長あたりのR・L・Cを変更します。</p>
       <p>ケーブル以外は、抵抗1 Ω〜100 MΩ（Grid stopperのみ0 Ωも可）、Lは1 µH〜100 H、Cは1 pF〜1,000 µFまで変更できます。E24系列を基本とし、従来の用途固有値も維持しています。極端な値は実機としての妥当性や部品の入手性を保証しない、理想化モデル上の実験用です。グラフの縦軸は現在値と初期値に合わせて自動調整します。</p>
       <h2>モデルの前提</h2>
@@ -188,6 +189,6 @@
       <div class="dialog-actions"><button class="quiet-button" value="cancel" type="button" id="valueCancel">キャンセル</button><button class="quiet-button primary-button" value="default" type="submit">適用</button></div>
     </form>
   </dialog>
-  <script src="app.js?v=20260920-length100"></script>
+  <script src="app.js?v=20260921-mobile"></script>
 </body>
 </html>

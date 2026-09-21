@@ -848,6 +848,12 @@ const observer = new ResizeObserver(() => {
   observer.timer = setTimeout(() => { updateGuitar(); updateLine(); updateEffector(); }, 80);
 });
 observer.observe(document.body);
+$("layoutMode").addEventListener("change", event => {
+  const mode = event.target.value;
+  document.documentElement.dataset.view = mode;
+  $("mobileLayoutStyles").media = mode === "auto" ? "(max-width: 700px)" : mode === "mobile" ? "all" : "not all";
+  requestAnimationFrame(() => { updateGuitar(); updateLine(); updateEffector(); });
+});
 updateGuitar();
 updateLine();
 updateEffector();
